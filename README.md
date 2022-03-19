@@ -6,6 +6,7 @@ This is a starter to try the elm-pages 3.0 alpha. Any feedback would be very hel
 ## Setup Instructions
 You can clone this repo with `git clone --recurse-submodules https://github.com/dillonkearns/elm-pages-3-alpha-starter.git`.
 
+`npm install` from the cloned repo. Before running the dev server or build, make sure to install Lamdera (see below).
 
 
 ### Install Lamdera

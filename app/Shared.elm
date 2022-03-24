@@ -2,6 +2,7 @@ module Shared exposing (Data, Model, Msg(..), SharedMsg(..), template)
 
 import Browser.Navigation
 import DataSource
+import Effect exposing (Effect)
 import Html exposing (Html)
 import Html.Events
 import Pages.Flags
@@ -54,21 +55,21 @@ init :
             , metadata : route
             , pageUrl : Maybe PageUrl
             }
-    -> ( Model, Cmd Msg )
+    -> ( Model, Effect Msg )
 init navigationKey flags maybePagePath =
     ( { showMenu = False }
-    , Cmd.none
+    , Effect.none
     )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
         SharedMsg globalMsg ->
-            ( model, Cmd.none )
+            ( model, Effect.none )
 
         MenuClicked ->
-            ( { model | showMenu = not model.showMenu }, Cmd.none )
+            ( { model | showMenu = not model.showMenu }, Effect.none )
 
 
 subscriptions : Path -> Model -> Sub Msg

@@ -2,6 +2,10 @@
 
 This is a starter to try the elm-pages 3.0 alpha. Any feedback would be very helpful for getting the release ready to go!
 
+You can try this out on Netlify in just a couple of clicks with this button:
+
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/dillonkearns/elm-pages-3-alpha-starter)
+
 
 ## Setup Instructions
 You can clone this repo with `git clone --recurse-submodules https://github.com/dillonkearns/elm-pages-3-alpha-starter.git`.

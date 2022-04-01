@@ -1,17 +1,16 @@
-module Route.Greet exposing (Model, Msg, Data, route)
-
-import Server.Request as Request
-
+module Route.Greet exposing (Data, Model, Msg, route)
 
 import DataSource exposing (DataSource)
+import ErrorPage exposing (ErrorPage)
 import Head
 import Head.Seo as Seo
-import RouteBuilder exposing (StatelessRoute, StatefulRoute, StaticPayload)
-import Server.Response as Response exposing (Response)
+import Html
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Url
+import RouteBuilder exposing (StatefulRoute, StatelessRoute, StaticPayload)
+import Server.Request as Request
+import Server.Response as Response exposing (Response)
 import Shared
-
 import View exposing (View)
 
 
@@ -22,8 +21,10 @@ type alias Model =
 type alias Msg =
     ()
 
+
 type alias RouteParams =
-    {  }
+    {}
+
 
 route : StatelessRoute RouteParams Data
 route =
@@ -34,15 +35,29 @@ route =
         |> RouteBuilder.buildNoState { view = view }
 
 
-
-
 type alias Data =
-    {}
+    { name : Maybe String
+    }
 
 
-data : RouteParams -> Request.Parser (DataSource (Response Data))
+data : RouteParams -> Request.Parser (DataSource (Response Data ErrorPage))
 data routeParams =
-    Request.succeed (DataSource.succeed (Response.render Data))
+    Request.oneOf
+        [ Request.expectQueryParam "name"
+            |> Request.map
+                (\name ->
+                    DataSource.succeed
+                        (Response.render
+                            { name = Just name }
+                        )
+                )
+        , Request.succeed
+            (DataSource.succeed
+                (Response.render
+                    { name = Nothing }
+                )
+            )
+        ]
 
 
 head :
@@ -65,11 +80,21 @@ head static =
         |> Seo.website
 
 
-
 view :
     Maybe PageUrl
     -> Shared.Model
     -> StaticPayload Data RouteParams
     -> View Msg
 view maybeUrl sharedModel static =
-    View.placeholder "Greet"
+    { title = "Greetings"
+    , body =
+        [ Html.div []
+            [ case static.data.name of
+                Just name ->
+                    Html.text ("Hello " ++ name)
+
+                Nothing ->
+                    Html.text "Hello, I didn't find your name"
+            ]
+        ]
+    }

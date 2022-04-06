@@ -10,6 +10,7 @@ import Json.Decode as Decode
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Url
 import Path
+import Route
 import RouteBuilder exposing (StatelessRoute, StaticPayload)
 import Shared
 import View exposing (View)
@@ -80,6 +81,7 @@ view maybeUrl sharedModel static =
         , Html.p []
             [ Html.text <| "The message is: " ++ static.data.message
             ]
-        , Html.a [ Attr.href "/blog/hello" ] [ Html.text "My blog post" ]
+        , Route.Blog__Slug_ { slug = "hello" }
+            |> Route.link [] [ Html.text "My blog post" ]
         ]
     }

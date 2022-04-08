@@ -3,7 +3,13 @@ import fs from "fs";
 
 export default async function run(
   /** @type {import('./adapter-types').AdapterConfig} */
-  { renderFunctionFilePath, routePatterns, apiRoutePatterns, portsFilePath }
+  {
+    renderFunctionFilePath,
+    routePatterns,
+    apiRoutePatterns,
+    portsFilePath,
+    htmlTemplate,
+  }
 ) {
   console.log("Running adapter script");
   ensureDirSync("functions/render");
@@ -23,17 +29,13 @@ export default async function run(
     "./functions/server-render/port-data-source.mjs"
   );
 
-  const processedHtml = fs.readFileSync(
-    "./dist/elm-stuff/elm-pages/index.html",
-    "utf-8"
-  );
   fs.writeFileSync(
     "./functions/render/index.js",
-    rendererCode(true, processedHtml)
+    rendererCode(true, htmlTemplate)
   );
   fs.writeFileSync(
     "./functions/server-render/index.js",
-    rendererCode(false, processedHtml)
+    rendererCode(false, htmlTemplate)
   );
   // TODO rename functions/render to functions/fallback-render
   // TODO prepend instead of writing file
@@ -102,12 +104,12 @@ function isServerSide(route) {
 
 /**
  * @param {boolean} isOnDemand
- * @param {string} processedHtml
+ * @param {string} htmlTemplate
  */
-function rendererCode(isOnDemand, processedHtml) {
+function rendererCode(isOnDemand, htmlTemplate) {
   return `const path = require("path");
 const busboy = require("busboy");
-const processedHtml = ${JSON.stringify(processedHtml)};
+const htmlTemplate = ${JSON.stringify(htmlTemplate)};
 
 ${
   isOnDemand
@@ -172,9 +174,9 @@ async function render(event, context) {
         isBase64Encoded: serverResponse.isBase64Encoded,
       };
     } else {
-      console.log('@rendering', preRenderHtml.replaceTemplate(processedHtml, renderResult.htmlString))
+      console.log('@rendering', preRenderHtml.replaceTemplate(htmlTemplate, renderResult.htmlString))
       return {
-        body: preRenderHtml.replaceTemplate(processedHtml, renderResult.htmlString),
+        body: preRenderHtml.replaceTemplate(htmlTemplate, renderResult.htmlString),
         headers: {
           "Content-Type": "text/html",
           "x-powered-by": "elm-pages",

@@ -1,4 +1,4 @@
-module Shared exposing (Data, Model, Msg(..), SharedMsg(..), template)
+port module Shared exposing (Data, Model, Msg(..), SharedMsg(..), template)
 
 import DataSource
 import Effect exposing (Effect)
@@ -10,6 +10,9 @@ import Path exposing (Path)
 import Route exposing (Route)
 import SharedTemplate exposing (SharedTemplate)
 import View exposing (View)
+
+
+port log : String -> Cmd msg
 
 
 template : SharedTemplate Msg Model Data msg
@@ -56,7 +59,7 @@ init :
     -> ( Model, Effect Msg )
 init flags maybePagePath =
     ( { showMenu = False }
-    , Effect.none
+    , Effect.fromCmd (log "Hello from Elm!")
     )
 
 

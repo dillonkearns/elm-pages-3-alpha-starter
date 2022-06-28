@@ -1,8 +1,10 @@
 module Effect exposing (Effect(..), batch, fromCmd, map, none, perform)
 
 import Browser.Navigation
+import FormDecoder
 import Http
 import Json.Decode as Decode
+import Pages.Fetcher
 import Url exposing (Url)
 
 
@@ -11,9 +13,8 @@ type Effect msg
     | Cmd (Cmd msg)
     | Batch (List (Effect msg))
     | GetStargazers (Result Http.Error Int -> msg)
-    | FetchPageData
-        { body : Maybe { contentType : String, body : String }
-        , path : Maybe String
+    | FetchRouteData
+        { data : Maybe FormDecoder.FormData
         , toMsg : Result Http.Error Url -> msg
         }
 
@@ -54,25 +55,30 @@ map fn effect =
         GetStargazers toMsg ->
             GetStargazers (toMsg >> fn)
 
-        FetchPageData fetchInfo ->
-            FetchPageData
-                { body = fetchInfo.body
-                , path = fetchInfo.path
+        FetchRouteData fetchInfo ->
+            FetchRouteData
+                { data = fetchInfo.data
                 , toMsg = fetchInfo.toMsg >> fn
                 }
 
 
 perform :
     { fetchRouteData :
-        { body : Maybe { contentType : String, body : String }
-        , path : Maybe String
+        { data : Maybe FormDecoder.FormData
         , toMsg : Result Http.Error Url -> pageMsg
         }
         -> Cmd msg
-
-    --, fromSharedMsg : Shared.Msg -> msg
+    , submit :
+        { values : FormDecoder.FormData
+        , toMsg : Result Http.Error Url -> pageMsg
+        }
+        -> Cmd msg
+    , runFetcher :
+        Pages.Fetcher.Fetcher pageMsg
+        -> Cmd msg
     , fromPageMsg : pageMsg -> msg
     , key : Browser.Navigation.Key
+    , setField : { formId : String, name : String, value : String } -> Cmd msg
     }
     -> Effect pageMsg
     -> Cmd msg
@@ -93,9 +99,5 @@ perform ({ fetchRouteData, fromPageMsg } as info) effect =
                 , expect = Http.expectJson (toMsg >> fromPageMsg) (Decode.field "stargazers_count" Decode.int)
                 }
 
-        FetchPageData fetchInfo ->
-            fetchRouteData
-                { body = fetchInfo.body
-                , path = fetchInfo.path
-                , toMsg = fetchInfo.toMsg
-                }
+        FetchRouteData fetchInfo ->
+            info.fetchRouteData fetchInfo

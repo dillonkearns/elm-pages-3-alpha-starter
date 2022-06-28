@@ -30,17 +30,20 @@
             "elm-community/list-extra": "8.3.0",
             "elm-community/result-extra": "2.4.0",
             "jluckyiv/elm-utc-date-strings": "1.0.0",
+            "justinmimbs/date": "4.0.1",
             "lamdera/codecs": "1.0.0",
             "lamdera/core": "1.0.0",
             "miniBill/elm-codec": "2.0.0",
             "noahzgordon/elm-color-extra": "1.0.2",
             "robinheghan/fnv1a": "1.0.0",
+            "rtfeldman/elm-css": "17.1.1",
             "turboMaCk/non-empty-list-alias": "1.2.0",
             "vito/elm-ansi": "10.0.1"
         },
         "indirect": {
             "elm/file": "1.0.5",
             "fredcy/elm-parseint": "2.0.1",
+            "robinheghan/murmur3": "1.0.0",
             "rtfeldman/elm-hex": "1.0.0"
         }
     },

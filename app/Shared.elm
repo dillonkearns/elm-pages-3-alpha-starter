@@ -9,7 +9,15 @@ import Pages.PageUrl exposing (PageUrl)
 import Path exposing (Path)
 import Route exposing (Route)
 import SharedTemplate exposing (SharedTemplate)
+import Time
 import View exposing (View)
+
+
+type alias DetalleCambio =
+    { path : Path
+    , query : Maybe String
+    , fragment : Maybe String
+    }
 
 
 template : SharedTemplate Msg Model Data msg
@@ -19,13 +27,16 @@ template =
     , view = view
     , data = data
     , subscriptions = subscriptions
-    , onPageChange = Nothing
+    , onPageChange = Just OnPageChange
     }
 
 
 type Msg
     = SharedMsg SharedMsg
     | MenuClicked
+    | OnPageChange DetalleCambio
+    | TimeNow Time.Posix
+    | BotonActTimePressed
 
 
 type alias Data =
@@ -68,6 +79,17 @@ update msg model =
 
         MenuClicked ->
             ( { model | showMenu = not model.showMenu }, Effect.none )
+
+        OnPageChange _ ->
+            ( model, Effect.GetTheTime TimeNow )
+
+        BotonActTimePressed ->
+            ( model, Effect.GetTheTime TimeNow )
+
+        TimeNow time ->
+            ( { model | time = Just time }
+            , Effect.none
+            )
 
 
 subscriptions : Path -> Model -> Sub Msg

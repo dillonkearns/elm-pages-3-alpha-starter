@@ -49,6 +49,7 @@ type SharedMsg
 
 type alias Model =
     { showMenu : Bool
+    , time : Maybe Time.Posix
     }
 
 
@@ -66,7 +67,9 @@ init :
             }
     -> ( Model, Effect Msg )
 init flags maybePagePath =
-    ( { showMenu = False }
+    ( { showMenu = False
+      , time = Nothing
+      }
     , Effect.none
     )
 
@@ -134,6 +137,26 @@ view sharedData page model toMsg pageView =
 
                   else
                     Html.text ""
+                , case model.time of
+                    Nothing ->
+                        Html.text ""
+
+                    Just tiempo ->
+                        Html.p []
+                            [ Html.text
+                                (String.join ":" <|
+                                    List.map
+                                        String.fromInt
+                                        [ Time.toHour Time.utc tiempo
+                                        , Time.toSecond Time.utc tiempo
+                                        , Time.toMillis Time.utc tiempo
+                                        ]
+                                )
+                            ]
+                , Html.button [ Html.Events.onClick BotonActTimePressed ]
+                    [ Html.text
+                        "New Time"
+                    ]
                 ]
                 |> Html.map toMsg
             , Html.main_ [] pageView.body

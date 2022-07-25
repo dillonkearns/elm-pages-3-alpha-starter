@@ -9,7 +9,15 @@ import Pages.PageUrl exposing (PageUrl)
 import Path exposing (Path)
 import Route exposing (Route)
 import SharedTemplate exposing (SharedTemplate)
+import Time
 import View exposing (View)
+
+
+type alias DetalleCambio =
+    { path : Path
+    , query : Maybe String
+    , fragment : Maybe String
+    }
 
 
 template : SharedTemplate Msg Model Data msg
@@ -19,13 +27,16 @@ template =
     , view = view
     , data = data
     , subscriptions = subscriptions
-    , onPageChange = Nothing
+    , onPageChange = Just OnPageChange
     }
 
 
 type Msg
     = SharedMsg SharedMsg
     | MenuClicked
+    | OnPageChange DetalleCambio
+    | TimeNow Time.Posix
+    | BotonActTimePressed
 
 
 type alias Data =
@@ -38,6 +49,7 @@ type SharedMsg
 
 type alias Model =
     { showMenu : Bool
+    , time : Maybe Time.Posix
     }
 
 
@@ -55,7 +67,9 @@ init :
             }
     -> ( Model, Effect Msg )
 init flags maybePagePath =
-    ( { showMenu = False }
+    ( { showMenu = False
+      , time = Nothing
+      }
     , Effect.none
     )
 
@@ -68,6 +82,17 @@ update msg model =
 
         MenuClicked ->
             ( { model | showMenu = not model.showMenu }, Effect.none )
+
+        OnPageChange _ ->
+            ( model, Effect.GetTheTime TimeNow )
+
+        BotonActTimePressed ->
+            ( model, Effect.GetTheTime TimeNow )
+
+        TimeNow time ->
+            ( { model | time = Just time }
+            , Effect.none
+            )
 
 
 subscriptions : Path -> Model -> Sub Msg
@@ -112,6 +137,26 @@ view sharedData page model toMsg pageView =
 
                   else
                     Html.text ""
+                , case model.time of
+                    Nothing ->
+                        Html.text ""
+
+                    Just tiempo ->
+                        Html.p []
+                            [ Html.text
+                                (String.join ":" <|
+                                    List.map
+                                        String.fromInt
+                                        [ Time.toHour Time.utc tiempo
+                                        , Time.toSecond Time.utc tiempo
+                                        , Time.toMillis Time.utc tiempo
+                                        ]
+                                )
+                            ]
+                , Html.button [ Html.Events.onClick BotonActTimePressed ]
+                    [ Html.text
+                        "New Time"
+                    ]
                 ]
                 |> Html.map toMsg
             , Html.main_ [] pageView.body

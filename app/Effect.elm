@@ -5,6 +5,8 @@ import FormDecoder
 import Http
 import Json.Decode as Decode
 import Pages.Fetcher
+import Task
+import Time
 import Url exposing (Url)
 
 
@@ -17,6 +19,7 @@ type Effect msg
         { data : Maybe FormDecoder.FormData
         , toMsg : Result Http.Error Url -> msg
         }
+    | GetTheTime (Time.Posix -> msg)
 
 
 type alias RequestInfo =
@@ -61,6 +64,9 @@ map fn effect =
                 , toMsg = fetchInfo.toMsg >> fn
                 }
 
+        GetTheTime toMsg ->
+            GetTheTime (toMsg >> fn)
+
 
 perform :
     { fetchRouteData :
@@ -101,3 +107,12 @@ perform ({ fetchRouteData, fromPageMsg } as info) effect =
 
         FetchRouteData fetchInfo ->
             info.fetchRouteData fetchInfo
+
+        GetTheTime toMsg ->
+            let
+                _ =
+                    Debug.log "Si consultó pues" "*!*!*!"
+            in
+            Task.perform
+                (toMsg >> fromPageMsg)
+                Time.now

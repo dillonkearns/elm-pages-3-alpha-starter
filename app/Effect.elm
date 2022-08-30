@@ -1,7 +1,7 @@
 module Effect exposing (Effect(..), batch, fromCmd, map, none, perform)
 
 import Browser.Navigation
-import FormDecoder
+import Form.FormData exposing (FormData)
 import Http
 import Json.Decode as Decode
 import Pages.Fetcher
@@ -13,10 +13,16 @@ type Effect msg
     | Cmd (Cmd msg)
     | Batch (List (Effect msg))
     | GetStargazers (Result Http.Error Int -> msg)
+    | SetField { formId : String, name : String, value : String }
     | FetchRouteData
-        { data : Maybe FormDecoder.FormData
+        { data : Maybe FormData
         , toMsg : Result Http.Error Url -> msg
         }
+    | Submit
+        { values : FormData
+        , toMsg : Result Http.Error Url -> msg
+        }
+    | SubmitFetcher (Pages.Fetcher.Fetcher msg)
 
 
 type alias RequestInfo =
@@ -61,15 +67,29 @@ map fn effect =
                 , toMsg = fetchInfo.toMsg >> fn
                 }
 
+        Submit fetchInfo ->
+            Submit
+                { values = fetchInfo.values
+                , toMsg = fetchInfo.toMsg >> fn
+                }
+
+        SetField info ->
+            SetField info
+
+        SubmitFetcher fetcher ->
+            fetcher
+                |> Pages.Fetcher.map fn
+                |> SubmitFetcher
+
 
 perform :
     { fetchRouteData :
-        { data : Maybe FormDecoder.FormData
+        { data : Maybe FormData
         , toMsg : Result Http.Error Url -> pageMsg
         }
         -> Cmd msg
     , submit :
-        { values : FormDecoder.FormData
+        { values : FormData
         , toMsg : Result Http.Error Url -> pageMsg
         }
         -> Cmd msg
@@ -82,7 +102,7 @@ perform :
     }
     -> Effect pageMsg
     -> Cmd msg
-perform ({ fetchRouteData, fromPageMsg } as info) effect =
+perform ({ fromPageMsg, key } as helpers) effect =
     case effect of
         None ->
             Cmd.none
@@ -90,14 +110,25 @@ perform ({ fetchRouteData, fromPageMsg } as info) effect =
         Cmd cmd ->
             Cmd.map fromPageMsg cmd
 
+        SetField info ->
+            helpers.setField info
+
         Batch list ->
-            Cmd.batch (List.map (perform info) list)
+            Cmd.batch (List.map (perform helpers) list)
 
         GetStargazers toMsg ->
             Http.get
-                { url = "https://api.github.com/repos/dillonkearns/elm-pages"
+                { url =
+                    "https://api.github.com/repos/dillonkearns/elm-pages"
                 , expect = Http.expectJson (toMsg >> fromPageMsg) (Decode.field "stargazers_count" Decode.int)
                 }
 
         FetchRouteData fetchInfo ->
-            info.fetchRouteData fetchInfo
+            helpers.fetchRouteData
+                fetchInfo
+
+        Submit record ->
+            helpers.submit record
+
+        SubmitFetcher record ->
+            helpers.runFetcher record

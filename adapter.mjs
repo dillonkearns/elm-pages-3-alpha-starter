@@ -1,16 +1,13 @@
-// @ts-check
 import fs from "fs";
+import path from "path";
 
-export default async function run(
-  /** @type {import('./adapter-types').AdapterConfig} */
-  {
-    renderFunctionFilePath,
-    routePatterns,
-    apiRoutePatterns,
-    portsFilePath,
-    htmlTemplate,
-  }
-) {
+export default async function run({
+  renderFunctionFilePath,
+  routePatterns,
+  apiRoutePatterns,
+  portsFilePath,
+  htmlTemplate,
+}) {
   console.log("Running adapter script");
   ensureDirSync("functions/render");
   ensureDirSync("functions/server-render");
@@ -23,10 +20,10 @@ export default async function run(
     renderFunctionFilePath,
     "./functions/server-render/elm-pages-cli.js"
   );
-  fs.copyFileSync(portsFilePath, "./functions/render/port-data-source.mjs");
+  fs.copyFileSync(portsFilePath, "./functions/render/port-data-source.js");
   fs.copyFileSync(
     portsFilePath,
-    "./functions/server-render/port-data-source.mjs"
+    "./functions/server-render/port-data-source.js"
   );
 
   fs.writeFileSync(
@@ -71,7 +68,10 @@ export default async function run(
 ${route.pathPattern}/content.dat /.netlify/builders/render 200`;
         } else {
           return `${route.pathPattern} /.netlify/functions/server-render 200
-${route.pathPattern}/content.dat /.netlify/functions/server-render 200`;
+${path.join(
+  route.pathPattern,
+  "/content.dat"
+)} /.netlify/functions/server-render 200`;
         }
       })
       .join("\n") +
@@ -132,9 +132,9 @@ async function render(event, context) {
   global.staticHttpCache = {};
 
   const compiledElmPath = path.join(__dirname, "elm-pages-cli.js");
-  const compiledPortsFile = path.join(__dirname, "port-data-source.mjs");
-  const renderer = require("../../elm-pages/generator/src/render");
-  const preRenderHtml = require("../../elm-pages/generator/src/pre-render-html");
+  const compiledPortsFile = path.join(__dirname, "port-data-source.js");
+  const renderer = require("../../../../generator/src/render");
+  const preRenderHtml = require("../../../../generator/src/pre-render-html");
   try {
     const basePath = "/";
     const mode = "build";
@@ -187,8 +187,9 @@ async function render(event, context) {
     }
   } catch (error) {
     console.error(error);
+    console.error(JSON.stringify(error, null, 2));
     return {
-      body: \`<body><h1>Error</h1><pre>\${error.toString()}</pre></body>\`,
+      body: \`<body><h1>Error</h1><pre>\${JSON.stringify(error, null, 2)}</pre></body>\`,
       statusCode: 500,
       headers: {
         "Content-Type": "text/html",

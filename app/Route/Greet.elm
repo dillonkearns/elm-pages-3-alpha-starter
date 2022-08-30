@@ -1,10 +1,12 @@
 module Route.Greet exposing (ActionData, Data, Model, Msg, route)
 
 import DataSource exposing (DataSource)
+import DataSource.Http
 import ErrorPage exposing (ErrorPage)
 import Head
 import Head.Seo as Seo
 import Html
+import Json.Decode as Decode
 import Pages.Msg
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Url
@@ -52,10 +54,13 @@ data routeParams =
         [ Request.expectQueryParam "name"
             |> Request.map
                 (\name ->
-                    DataSource.succeed
-                        (Response.render
-                            { name = Just name }
-                        )
+                    DataSource.Http.get "http://worldtimeapi.org/api/timezone/America/Los_Angeles"
+                        (Decode.field "utc_datetime" Decode.string)
+                        |> DataSource.map
+                            (\dateTimeString ->
+                                Response.render
+                                    { name = Just dateTimeString }
+                            )
                 )
         , Request.succeed
             (DataSource.succeed

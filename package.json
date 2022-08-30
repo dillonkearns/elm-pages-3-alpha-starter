@@ -6,13 +6,13 @@
     "build": "elm-pages build"
   },
   "devDependencies": {
-    "elm-optimize-level-2": "^0.3.4",
+    "elm-optimize-level-2": "^0.3.5",
     "elm-pages": "file:elm-pages",
     "elm-review": "^2.7.1",
     "elm-tooling": "^1.7.0",
-    "vite": "^2.9.1"
+    "vite": "^3.0.9"
   },
   "dependencies": {
-    "@netlify/functions": "^1.0.0"
+    "@netlify/functions": "^1.2.0"
   }
 }

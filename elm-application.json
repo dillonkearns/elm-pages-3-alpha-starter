@@ -1,0 +1,11 @@
+{
+    "name": "user/elm-pages-starter",
+    "summary": "Full-Stack TodoMVC demo with elm-pages.",
+    "version": "1.0.0",
+    "exposed-modules": [
+        "RouteBuilder",
+        "View",
+        "Effect",
+        "Route"
+    ]
+}

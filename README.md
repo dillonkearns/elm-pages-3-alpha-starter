@@ -6,12 +6,11 @@ You can try this out on Netlify in just a couple of clicks with this button:
 
 [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/dillonkearns/elm-pages-3-alpha-starter)
 
-
 ## Setup Instructions
+
 You can clone this repo with `git clone --recurse-submodules https://github.com/dillonkearns/elm-pages-3-alpha-starter.git`.
 
 `npm install` from the cloned repo. Before running the dev server or build, make sure to install Lamdera (see below).
-
 
 ### Install Lamdera
 
@@ -24,7 +23,7 @@ You can clone this repo with `git clone --recurse-submodules https://github.com/
 Sometimes Lamdera will give compiler errors due to corrupted dependency cache. These messages will display a note at the bottom:
 
 ```
--- PROBLEM BUILDING DEPENDENCIES --------------- 
+-- PROBLEM BUILDING DEPENDENCIES ---------------
 
 ...
 
@@ -40,3 +39,11 @@ Be sure to use `lamdera reset` to reset the caches for these cases. See more inf
 Check out [the 3.0 Package Docs](https://elm-doc-preview.netlify.app/?repo=dillonkearns%2Felm-pages&version=serverless-latest). The 3.0 docs are still a work in progress. As part of the final release, I will be going through and filling in documentation and updating missing docs. Feel free to make a pull request to update or add docs, or share feedback on the APIs and naming.
 
 You can also use `npx elm-pages docs` from your project to view the documentation for the `RouteBuilder` module.
+
+## Running `elm-pages codegen` command
+
+- `npm install`
+- `npx elm-pages gen` - we need to make sure we've generated our local project files using elm-pages
+- `npx elm-doc-preview --output docs.json` - `elm-codegen` needs a docs.json file for the local modules listed in our `elm-application.json`. You can add more modules there, just be sure you add doc comments as needed. Running `npx elm-doc-preview` is a fast way to iterate on that with feedback in a browser window
+- `npx elm-codegen install` - this is what `elm-codegen` uses to build stubs to help us write our code generator (check out the `codegen/Gen` folder after running this command)
+- `npx elm-pages codegen Cli User.Id_` - now you can try out the generator! And you can tweak it, or even define new generator modules in the `codegen/` folder!

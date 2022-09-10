@@ -5,3 +5,4 @@ dist/
 functions/render
 functions/server-render
 .idea
+docs.json

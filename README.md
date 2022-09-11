@@ -44,6 +44,5 @@ You can also use `npx elm-pages docs` from your project to view the documentatio
 
 - `npm install`
 - `npx elm-pages gen` - we need to make sure we've generated our local project files using elm-pages
-- `npx elm-doc-preview --output docs.json` - `elm-codegen` needs a docs.json file for the local modules listed in our `elm-application.json`. You can add more modules there, just be sure you add doc comments as needed. Running `npx elm-doc-preview` is a fast way to iterate on that with feedback in a browser window
 - `npx elm-codegen install` - this is what `elm-codegen` uses to build stubs to help us write our code generator (check out the `codegen/Gen` folder after running this command)
 - `npx elm-pages codegen Cli User.Id_` - now you can try out the generator! And you can tweak it, or even define new generator modules in the `codegen/` folder!

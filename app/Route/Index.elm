@@ -57,7 +57,7 @@ data =
 head :
     StaticPayload Data ActionData RouteParams
     -> List Head.Tag
-head static =
+head app =
     Seo.summary
         { canonicalUrlOverride = Nothing
         , siteName = "elm-pages"
@@ -79,12 +79,12 @@ view :
     -> Shared.Model
     -> StaticPayload Data ActionData RouteParams
     -> View (Pages.Msg.Msg Msg)
-view maybeUrl sharedModel static =
+view maybeUrl sharedModel app =
     { title = "elm-pages is running"
     , body =
         [ Html.h1 [] [ Html.text "elm-pages is up and running!" ]
         , Html.p []
-            [ Html.text <| "The message is: " ++ static.data.message
+            [ Html.text <| "The message is: " ++ app.data.message
             ]
         , Route.Blog__Slug_ { slug = "hello" }
             |> Route.link [] [ Html.text "My blog post" ]

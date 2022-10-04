@@ -8,7 +8,7 @@ You can try this out on Netlify in just a couple of clicks with this button:
 
 ## Setup Instructions
 
-You can clone this repo with `git clone --recurse-submodules https://github.com/dillonkearns/elm-pages-3-alpha-starter.git`.
+You can clone this repo with `git clone https://github.com/dillonkearns/elm-pages-3-alpha-starter.git`.
 
 `npm install` from the cloned repo. Before running the dev server or build, make sure to install Lamdera (see below).
 

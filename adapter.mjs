@@ -41,8 +41,6 @@ export default async function run({
 
   ensureValidRoutePatternsForNetlify(apiServerRoutes);
 
-  // TODO filter apiRoutePatterns on is server side
-  // TODO need information on whether api route is odb or serverless
   const apiRouteRedirects = apiServerRoutes
     .map((apiRoute) => {
       if (apiRoute.kind === "prerender-with-fallback") {
@@ -108,7 +106,6 @@ function isServerSide(route) {
  */
 function rendererCode(isOnDemand, htmlTemplate) {
   return `const path = require("path");
-const busboy = require("busboy");
 const htmlTemplate = ${JSON.stringify(htmlTemplate)};
 
 ${
@@ -128,7 +125,6 @@ exports.handler = render;`
  */
 async function render(event, context) {
   const requestTime = new Date();
-  console.log(JSON.stringify(event));
   global.staticHttpCache = {};
 
   const compiledElmPath = path.join(__dirname, "elm-pages-cli.js");
@@ -146,11 +142,10 @@ async function render(event, context) {
       require(compiledElmPath),
       mode,
       event.path,
-      await reqToJson(event, requestTime),
+      toJsonHelper(event, requestTime),
       addWatcher,
       false
     );
-    console.log("@@@renderResult", JSON.stringify(renderResult, null, 2));
 
     const statusCode = renderResult.is404 ? 404 : renderResult.statusCode;
 
@@ -174,7 +169,6 @@ async function render(event, context) {
         isBase64Encoded: serverResponse.isBase64Encoded,
       };
     } else {
-      console.log('@rendering', preRenderHtml.replaceTemplate(htmlTemplate, renderResult.htmlString))
       return {
         body: preRenderHtml.replaceTemplate(htmlTemplate, renderResult.htmlString),
         headers: {
@@ -202,78 +196,16 @@ async function render(event, context) {
 /**
  * @param {import('aws-lambda').APIGatewayProxyEvent} req
  * @param {Date} requestTime
- * @returns {Promise<{ method: string; hostname: string; query: Record<string, string | undefined>; headers: Record<string, string>; host: string; pathname: string; port: number | null; protocol: string; rawUrl: string; }>}
- */
-function reqToJson(req, requestTime) {
-  return new Promise((resolve, reject) => {
-    if (
-      req.httpMethod && req.httpMethod.toUpperCase() === "POST" &&
-      req.headers["content-type"] &&
-      req.headers["content-type"].includes("multipart/form-data") &&
-      req.body
-    ) {
-      try {
-        console.log('@@@1');
-        const bb = busboy({
-          headers: req.headers,
-        });
-        let fields = {};
-
-        bb.on("file", (fieldname, file, info) => {
-          console.log('@@@2');
-          const { filename, encoding, mimeType } = info;
-
-          file.on("data", (data) => {
-            fields[fieldname] = {
-              filename,
-              mimeType,
-              body: data.toString(),
-            };
-          });
-        });
-
-        bb.on("field", (fieldName, value) => {
-          console.log("@@@field", fieldName, value);
-          fields[fieldName] = value;
-        });
-
-        // TODO skip parsing JSON and form data body if busboy doesn't run
-        bb.on("close", () => {
-          console.log('@@@3');
-          console.log("@@@close", fields);
-          resolve(toJsonHelper(req, requestTime, fields));
-        });
-        console.log('@@@4');
-        
-        if (req.isBase64Encoded) {
-          bb.write(Buffer.from(req.body, 'base64').toString('utf8'));
-        } else {
-          bb.write(req.body);
-        }
-      } catch (error) {
-        console.error('@@@5', error);
-        resolve(toJsonHelper(req, requestTime, null));
-      }
-    } else {
-      console.log('@@@6');
-      resolve(toJsonHelper(req, requestTime, null));
-    }
-  });
-}
-
-/**
- * @param {import('aws-lambda').APIGatewayProxyEvent} req
- * @param {Date} requestTime
  * @returns {{method: string; rawUrl: string; body: string?; headers: Record<string, string>; requestTime: number; multiPartFormData: unknown }}
  */
-function toJsonHelper(req, requestTime, multiPartFormData) {
+function toJsonHelper(req, requestTime) {
   return {
     method: req.httpMethod,
     headers: req.headers,
     rawUrl: req.rawUrl,
     body: req.body,
     requestTime: Math.round(requestTime.getTime()),
-    multiPartFormData: multiPartFormData,
+    multiPartFormData: null,
   };
 }
 `;

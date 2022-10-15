@@ -89,32 +89,31 @@ view :
     -> Model
     -> (Msg -> msg)
     -> View msg
-    -> { body : Html msg, title : String }
+    -> { body : List (Html msg), title : String }
 view sharedData page model toMsg pageView =
     { body =
-        Html.div []
-            [ Html.nav []
-                [ Html.button
-                    [ Html.Events.onClick MenuClicked ]
-                    [ Html.text
-                        (if model.showMenu then
-                            "Close Menu"
+        [ Html.nav []
+            [ Html.button
+                [ Html.Events.onClick MenuClicked ]
+                [ Html.text
+                    (if model.showMenu then
+                        "Close Menu"
 
-                         else
-                            "Open Menu"
-                        )
-                    ]
-                , if model.showMenu then
-                    Html.ul []
-                        [ Html.li [] [ Html.text "Menu item 1" ]
-                        , Html.li [] [ Html.text "Menu item 2" ]
-                        ]
-
-                  else
-                    Html.text ""
+                     else
+                        "Open Menu"
+                    )
                 ]
-                |> Html.map toMsg
-            , Html.main_ [] pageView.body
+            , if model.showMenu then
+                Html.ul []
+                    [ Html.li [] [ Html.text "Menu item 1" ]
+                    , Html.li [] [ Html.text "Menu item 2" ]
+                    ]
+
+              else
+                Html.text ""
             ]
+            |> Html.map toMsg
+        , Html.main_ [] pageView.body
+        ]
     , title = pageView.title
     }

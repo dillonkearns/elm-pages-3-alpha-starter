@@ -36,7 +36,7 @@ Be sure to use `lamdera reset` to reset the caches for these cases. See more inf
 
 ### Docs
 
-Check out [the 3.0 Package Docs](https://elm-doc-preview.netlify.app/?repo=dillonkearns%2Felm-pages&version=serverless-latest). The 3.0 docs are still a work in progress. As part of the final release, I will be going through and filling in documentation and updating missing docs. Feel free to make a pull request to update or add docs, or share feedback on the APIs and naming.
+Check out [the 3.0 Package Docs](https://package.elm-lang.org/packages/dillonkearns/elm-pages-v3-beta/latest/). The 3.0 docs are still a work in progress. As part of the final release, I will be going through and filling in documentation and updating missing docs. Feel free to make a pull request to update or add docs, or share feedback on the APIs and naming.
 
 You can also use `npx elm-pages docs` from your project to view the documentation for the `RouteBuilder` module.
 

@@ -1,6 +1,4 @@
-port module Cli exposing (main)
-
-{-| -}
+module Cli exposing (run)
 
 import Cli.Option as Option
 import Cli.OptionsParser as OptionsParser
@@ -17,6 +15,7 @@ import Gen.Server.Request
 import Gen.Server.Response
 import Gen.View
 import Pages.Generate exposing (Type(..))
+import Pages.Script as Script exposing (Script)
 
 
 type alias CliOptions =
@@ -41,31 +40,21 @@ moduleNameRegex =
     "([A-Z][a-zA-Z0-9_]*)(\\.([A-Z][a-zA-Z_0-9_]*))*"
 
 
-main : Program.StatelessProgram Never {}
-main =
-    Program.stateless
-        { printAndExitFailure = printAndExitFailure
-        , printAndExitSuccess = printAndExitSuccess
-        , init = init
-        , config = program
-        }
-
-
-type alias Flags =
-    Program.FlagsIncludingArgv {}
-
-
-init : Flags -> CliOptions -> Cmd Never
-init flags cliOptions =
-    let
-        file : Elm.File
-        file =
-            createFile (cliOptions.moduleName |> String.split ".")
-    in
-    writeFile
-        { path = file.path
-        , body = file.contents
-        }
+run : Script
+run =
+    Script.withCliOptions program
+        (\cliOptions ->
+            let
+                file : Elm.File
+                file =
+                    createFile (cliOptions.moduleName |> String.split ".")
+            in
+            Script.writeFile
+                { path = "app/" ++ file.path
+                , body = file.contents
+                }
+         --Script.log "Hello!"
+        )
 
 
 createFile : List String -> Elm.File
@@ -139,15 +128,3 @@ createFile moduleName =
 effectType : Elm.Annotation.Annotation
 effectType =
     Elm.Annotation.namedWith [ "Effect" ] "Effect" [ Elm.Annotation.var "msg" ]
-
-
-port print : String -> Cmd msg
-
-
-port printAndExitFailure : String -> Cmd msg
-
-
-port printAndExitSuccess : String -> Cmd msg
-
-
-port writeFile : { path : String, body : String } -> Cmd msg

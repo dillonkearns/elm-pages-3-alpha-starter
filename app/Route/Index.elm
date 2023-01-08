@@ -1,7 +1,8 @@
 module Route.Index exposing (ActionData, Data, Model, Msg, route)
 
-import DataSource exposing (DataSource)
-import DataSource.Http
+import BackendTask exposing (BackendTask)
+import BackendTask.Http
+import Exception exposing (Throwable)
 import Head
 import Head.Seo as Seo
 import Html
@@ -47,11 +48,11 @@ route =
         |> RouteBuilder.buildNoState { view = view }
 
 
-data : DataSource Data
+data : BackendTask Throwable Data
 data =
-    DataSource.succeed Data
-        |> DataSource.andMap
-            (DataSource.succeed "Hello!")
+    BackendTask.succeed Data
+        |> BackendTask.andMap
+            (BackendTask.succeed "Hello!")
 
 
 head :

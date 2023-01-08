@@ -7,7 +7,7 @@ import Cli.Validate
 import Elm
 import Elm.Annotation
 import Elm.Case
-import Gen.DataSource
+import Gen.BackendTask
 import Gen.Effect
 import Gen.Html
 import Gen.Platform.Sub
@@ -65,7 +65,7 @@ createFile moduleName =
             ( Alias (Elm.Annotation.record [])
             , \routeParams ->
                 Gen.Server.Request.succeed
-                    (Gen.DataSource.succeed
+                    (Gen.BackendTask.succeed
                         (Gen.Server.Response.render
                             (Elm.record [])
                         )
@@ -75,7 +75,7 @@ createFile moduleName =
             ( Alias (Elm.Annotation.record [])
             , \routeParams ->
                 Gen.Server.Request.succeed
-                    (Gen.DataSource.succeed
+                    (Gen.BackendTask.succeed
                         (Gen.Server.Response.render
                             (Elm.record [])
                         )

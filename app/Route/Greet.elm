@@ -1,8 +1,9 @@
 module Route.Greet exposing (ActionData, Data, Model, Msg, route)
 
-import DataSource exposing (DataSource)
-import DataSource.Http
+import BackendTask exposing (BackendTask)
+import BackendTask.Http
 import ErrorPage exposing (ErrorPage)
+import Exception exposing (Throwable)
 import Head
 import Head.Seo as Seo
 import Html
@@ -34,7 +35,7 @@ route =
     RouteBuilder.serverRender
         { head = head
         , data = data
-        , action = \_ -> Request.succeed (DataSource.fail "No action.")
+        , action = \_ -> Request.succeed (BackendTask.fail (Exception.fromString "No action."))
         }
         |> RouteBuilder.buildNoState { view = view }
 
@@ -48,22 +49,23 @@ type alias ActionData =
     {}
 
 
-data : RouteParams -> Request.Parser (DataSource (Response Data ErrorPage))
+data : RouteParams -> Request.Parser (BackendTask Throwable (Response Data ErrorPage))
 data routeParams =
     Request.oneOf
         [ Request.expectQueryParam "name"
             |> Request.map
                 (\name ->
-                    DataSource.Http.get "http://worldtimeapi.org/api/timezone/America/Los_Angeles"
+                    BackendTask.Http.getJson "http://worldtimeapi.org/api/timezone/America/Los_Angeles"
                         (Decode.field "utc_datetime" Decode.string)
-                        |> DataSource.map
+                        |> BackendTask.throw
+                        |> BackendTask.map
                             (\dateTimeString ->
                                 Response.render
                                     { name = Just dateTimeString }
                             )
                 )
         , Request.succeed
-            (DataSource.succeed
+            (BackendTask.succeed
                 (Response.render
                     { name = Nothing }
                 )

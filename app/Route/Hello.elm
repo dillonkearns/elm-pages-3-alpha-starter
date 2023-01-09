@@ -87,8 +87,15 @@ data :
     -> Server.Request.Parser (BackendTask.BackendTask Exception.Throwable (Server.Response.Response Data ErrorPage.ErrorPage))
 data routeParams =
     Server.Request.succeed
-        (BackendTask.Http.getJson "https://api.github.com/repos/dillonkearns/elm-pages"
-            (Decode.field "stargazers_count" Decode.int)
+        (BackendTask.Http.getWithOptions
+            { url = "https://api.github.com/repos/dillonkearns/elm-pages"
+            , expect = BackendTask.Http.expectJson (Decode.field "stargazers_count" Decode.int)
+            , headers = []
+            , cacheStrategy = Just BackendTask.Http.IgnoreCache
+            , retries = Nothing
+            , timeoutInMs = Nothing
+            , cachePath = Nothing
+            }
             |> BackendTask.throw
             |> BackendTask.map
                 (\stars -> Server.Response.render { stars = stars })

@@ -13,9 +13,10 @@ run : Script
 run =
     Script.withCliOptions program
         (\{ username, repo } ->
-            BackendTask.Http.get
+            BackendTask.Http.getJson
                 ("https://api.github.com/repos/dillonkearns/" ++ repo)
                 (Decode.field "stargazers_count" Decode.int)
+                |> BackendTask.throw
                 |> BackendTask.andThen
                     (\stars ->
                         Script.log (String.fromInt stars)

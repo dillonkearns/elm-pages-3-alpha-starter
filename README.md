@@ -40,7 +40,7 @@ Check out [the 3.0 Package Docs](https://package.elm-lang.org/packages/dillonkea
 
 You can also use `npx elm-pages docs` from your project to view the documentation for the `RouteBuilder` module.
 
-## Running `elm-pages codegen` command
+## Running Scripts with `elm-pages run`
 
 - `npm install`
-- `npx elm-pages codegen Cli User.Id_` - now you can try out the generator! And you can tweak it, or even define new generator modules in the `codegen/` folder!
+- `npx elm-pages run Cli User.Id_` - now you can try out the generator! And you can tweak it, or even define new generator modules in the `script/` folder!

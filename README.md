@@ -22,8 +22,8 @@ I recommend locking your `elm-pages` installation to a specific version with a `
 
 I hope for this to be the easiest way to execute a pure Elm file from the command-line, and pull in data (like reading files or environment variables) or performing effects (like writing files, logging, or performing HTTP requests).
 
-This is done using `elm-pages`' [DataSource](https://package.elm-lang.org/packages/dillonkearns/elm-pages-v3-beta/latest/DataSource) API. Using [`DataSource.Port`](https://package.elm-lang.org/packages/dillonkearns/elm-pages-v3-beta/latest/DataSource-Port),
-you can define async JavaScript functions that execute in NodeJS. They receive JSON data, and send back JSON data, and they execute in parallel to other DataSource's, leveraging Node's strength for parallel I/O operations.
+This is done using `elm-pages`' [BackendTask](https://package.elm-lang.org/packages/dillonkearns/elm-pages-v3-beta/latest/BackendTask) API. Using [`BackendTask.Port`](https://package.elm-lang.org/packages/dillonkearns/elm-pages-v3-beta/latest/BackendTask-Port),
+you can define async JavaScript functions that execute in NodeJS. They receive JSON data, and send back JSON data, and they execute in parallel to other BackendTask's, leveraging Node's strength for parallel I/O operations.
 
 ## Setup Instructions
 
@@ -35,7 +35,7 @@ You can clone this repo with `git clone -b script-only https://github.com/dillon
 
 [Install Lamdera with these instructions](https://dashboard.lamdera.app/docs/download).
 
-`elm-pages` 3.0 uses the lamdera compiler, which is a superset of the Elm compiler with some extra functionality to automatically serialize Elm types to Bytes. That means there is no more `OptimizedDecoder` API, you can just use regular `elm/json` Decoders! And no more `DataSource.distill`, since types are now automatically serialized all those optimizations come for free.
+`elm-pages` 3.0 uses the lamdera compiler, which is a superset of the Elm compiler with some extra functionality to automatically serialize Elm types to Bytes. That means there is no more `OptimizedDecoder` API, you can just use regular `elm/json` Decoders! And no more `BackendTask.distill`, since types are now automatically serialized all those optimizations come for free.
 
 ### Debugging Lamdera Errors
 

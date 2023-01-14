@@ -43,4 +43,4 @@ You can also use `npx elm-pages docs` from your project to view the documentatio
 ## Running `elm-pages codegen` command
 
 - `npm install`
-- `npx elm-pages codegen Cli User.Id_` - now you can try out the generator! And you can tweak it, or even define new generator modules in the `codegen/` folder!
+- `npx elm-pages gen Cli User.Id_` - now you can try out the generator! And you can tweak it, or even define new generator modules in the `codegen/` folder!

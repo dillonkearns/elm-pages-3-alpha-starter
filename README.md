@@ -62,4 +62,4 @@ The docs for `elm-pages` Scripts is at https://package.elm-lang.org/packages/dil
 ## Running the `elm-pages run` command
 
 - `npm install`
-- `npx elm-pages codegen Stars --repo elm-graphql` - now you can try out the generator! And you can tweak it, or even define new generator modules in the `codegen/` folder!
+- `npx elm-pages run Stars --repo elm-graphql` - now you can run scripts! You can tweak them, or even define new Script modules in the `script/` folder!

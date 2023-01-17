@@ -6,7 +6,7 @@ import BackendTask
 import BackendTask.Http
 import Effect
 import ErrorPage
-import Exception
+import FatalError
 import Head
 import Html
 import Json.Decode as Decode
@@ -84,7 +84,7 @@ type alias ActionData =
 
 data :
     RouteParams
-    -> Server.Request.Parser (BackendTask.BackendTask Exception.Throwable (Server.Response.Response Data ErrorPage.ErrorPage))
+    -> Server.Request.Parser (BackendTask.BackendTask FatalError.FatalError (Server.Response.Response Data ErrorPage.ErrorPage))
 data routeParams =
     Server.Request.succeed
         (BackendTask.Http.getWithOptions
@@ -96,7 +96,7 @@ data routeParams =
             , timeoutInMs = Nothing
             , cachePath = Nothing
             }
-            |> BackendTask.throw
+            |> BackendTask.allowFatal
             |> BackendTask.map
                 (\stars -> Server.Response.render { stars = stars })
         )
@@ -119,6 +119,6 @@ view maybeUrl sharedModel model app =
 
 action :
     RouteParams
-    -> Server.Request.Parser (BackendTask.BackendTask Exception.Throwable (Server.Response.Response ActionData ErrorPage.ErrorPage))
+    -> Server.Request.Parser (BackendTask.BackendTask FatalError.FatalError (Server.Response.Response ActionData ErrorPage.ErrorPage))
 action routeParams =
     Server.Request.succeed (BackendTask.succeed (Server.Response.render {}))

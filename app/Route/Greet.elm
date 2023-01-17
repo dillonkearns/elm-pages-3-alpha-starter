@@ -3,7 +3,7 @@ module Route.Greet exposing (ActionData, Data, Model, Msg, route)
 import BackendTask exposing (BackendTask)
 import BackendTask.Http
 import ErrorPage exposing (ErrorPage)
-import Exception exposing (Throwable)
+import FatalError exposing (FatalError)
 import Head
 import Head.Seo as Seo
 import Html
@@ -35,7 +35,7 @@ route =
     RouteBuilder.serverRender
         { head = head
         , data = data
-        , action = \_ -> Request.succeed (BackendTask.fail (Exception.fromString "No action."))
+        , action = \_ -> Request.succeed (BackendTask.fail (FatalError.fromString "No action."))
         }
         |> RouteBuilder.buildNoState { view = view }
 
@@ -49,7 +49,7 @@ type alias ActionData =
     {}
 
 
-data : RouteParams -> Request.Parser (BackendTask Throwable (Response Data ErrorPage))
+data : RouteParams -> Request.Parser (BackendTask FatalError (Response Data ErrorPage))
 data routeParams =
     Request.oneOf
         [ Request.expectQueryParam "name"
@@ -57,7 +57,7 @@ data routeParams =
                 (\name ->
                     BackendTask.Http.getJson "http://worldtimeapi.org/api/timezone/America/Los_Angeles"
                         (Decode.field "utc_datetime" Decode.string)
-                        |> BackendTask.throw
+                        |> BackendTask.allowFatal
                         |> BackendTask.map
                             (\dateTimeString ->
                                 Response.render

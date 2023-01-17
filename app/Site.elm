@@ -1,7 +1,7 @@
 module Site exposing (config)
 
 import BackendTask exposing (BackendTask)
-import Exception exposing (Throwable)
+import FatalError exposing (FatalError)
 import Head
 import SiteConfig exposing (SiteConfig)
 
@@ -13,7 +13,7 @@ config =
     }
 
 
-head : BackendTask Throwable (List Head.Tag)
+head : BackendTask FatalError (List Head.Tag)
 head =
     [ Head.sitemapLink "/sitemap.xml"
     ]

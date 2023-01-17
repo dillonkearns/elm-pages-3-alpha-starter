@@ -16,7 +16,7 @@ run =
             BackendTask.Http.getJson
                 ("https://api.github.com/repos/dillonkearns/" ++ repo)
                 (Decode.field "stargazers_count" Decode.int)
-                |> BackendTask.throw
+                |> BackendTask.allowFatal
                 |> BackendTask.andThen
                     (\stars ->
                         Script.log (String.fromInt stars)

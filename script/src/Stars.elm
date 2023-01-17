@@ -21,7 +21,6 @@ run =
                     (\stars ->
                         Script.log (String.fromInt stars)
                     )
-                |> BackendTask.throw
         )
 
 

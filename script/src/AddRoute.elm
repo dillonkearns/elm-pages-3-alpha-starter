@@ -1,4 +1,4 @@
-module Cli exposing (run)
+module AddRoute exposing (run)
 
 import BackendTask
 import Cli.Option as Option
@@ -38,7 +38,7 @@ program =
 
 moduleNameRegex : String
 moduleNameRegex =
-    "([A-Z][a-zA-Z0-9_]*)(\\.([A-Z][a-zA-Z_0-9_]*))*"
+    "^[A-Z][a-zA-Z0-9_]*(\\.([A-Z][a-zA-Z0-9_]*))*$"
 
 
 run : Script

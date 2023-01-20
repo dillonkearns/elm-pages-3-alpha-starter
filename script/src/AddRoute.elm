@@ -10,6 +10,9 @@ import Elm.Annotation
 import Elm.Case
 import Gen.BackendTask
 import Gen.Effect
+import Gen.Form
+import Gen.Form.Field
+import Gen.Form.Validation
 import Gen.Html
 import Gen.Platform.Sub
 import Gen.Server.Request
@@ -21,6 +24,7 @@ import Pages.Script as Script exposing (Script)
 
 type alias CliOptions =
     { moduleName : String
+    , rest : List String
     }
 
 
@@ -33,12 +37,49 @@ program =
                     (Option.requiredPositionalArg "module"
                         |> Option.validate (Cli.Validate.regex moduleNameRegex)
                     )
+                |> OptionsParser.withRestArgs
+                    (Option.restArgs "fields")
             )
 
 
 moduleNameRegex : String
 moduleNameRegex =
     "^[A-Z][a-zA-Z0-9_]*(\\.([A-Z][a-zA-Z0-9_]*))*$"
+
+
+type Kind
+    = Kind
+
+
+formWithFields : List ( String, Kind ) -> Elm.Expression
+formWithFields fields =
+    Gen.Form.init
+        (Elm.function (List.map fieldToParam fields)
+            (\params ->
+                Elm.record
+                    [ ( "combine"
+                      , params
+                            |> List.foldl
+                                (\fieldExpression chain ->
+                                    chain
+                                        |> Gen.Form.Validation.andMap fieldExpression
+                                )
+                                (Gen.Form.Validation.succeed Elm.unit)
+                      )
+                    , ( "view"
+                      , Elm.list
+                            [ Gen.Html.button [] []
+                            ]
+                      )
+                    ]
+            )
+        )
+        |> Gen.Form.field "name" (Gen.Form.Field.text |> Gen.Form.Field.required (Elm.string "Required"))
+
+
+fieldToParam : ( String, Kind ) -> ( String, Maybe Elm.Annotation.Annotation )
+fieldToParam ( name, kind ) =
+    ( name, Nothing )
 
 
 run : Script

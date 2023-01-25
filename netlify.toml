@@ -8,3 +8,6 @@
   targetPort = 1234
   autoLaunch = true
   framework = "#custom"
+
+[functions]
+  node_bundler = "esbuild"

@@ -1,5 +1,4 @@
 import fs from "fs";
-import path from "path";
 
 export default async function run({
   renderFunctionFilePath,
@@ -20,18 +19,18 @@ export default async function run({
     renderFunctionFilePath,
     "./functions/server-render/elm-pages-cli.js"
   );
-  fs.copyFileSync(portsFilePath, "./functions/render/custom-backend-task.js");
+  fs.copyFileSync(portsFilePath, "./functions/render/custom-backend-task.mjs");
   fs.copyFileSync(
     portsFilePath,
-    "./functions/server-render/custom-backend-task.js"
+    "./functions/server-render/custom-backend-task.mjs"
   );
 
   fs.writeFileSync(
-    "./functions/render/index.js",
+    "./functions/render/index.mjs",
     rendererCode(true, htmlTemplate)
   );
   fs.writeFileSync(
-    "./functions/server-render/index.js",
+    "./functions/server-render/index.mjs",
     rendererCode(false, htmlTemplate)
   );
   // TODO rename functions/render to functions/fallback-render
@@ -66,10 +65,7 @@ export default async function run({
 ${route.pathPattern}/content.dat /.netlify/builders/render 200`;
         } else {
           return `${route.pathPattern} /.netlify/functions/server-render 200
-${path.join(
-  route.pathPattern,
-  "/content.dat"
-)} /.netlify/functions/server-render 200`;
+${route.pathPattern}/content.dat /.netlify/functions/server-render 200`;
         }
       })
       .join("\n") +
@@ -105,17 +101,21 @@ function isServerSide(route) {
  * @param {string} htmlTemplate
  */
 function rendererCode(isOnDemand, htmlTemplate) {
-  return `const path = require("path");
+  return `import * as path from "path";
+import * as busboy from "busboy";
+import { fileURLToPath } from "url";
+import * as renderer from "elm-pages/generator/src/render.js";
+import * as preRenderHtml from "elm-pages/generator/src/pre-render-html.js";
 const htmlTemplate = ${JSON.stringify(htmlTemplate)};
 
 ${
   isOnDemand
-    ? `const { builder } = require("@netlify/functions");
+    ? `import { builder } from "@netlify/functions";
 
-exports.handler = builder(render);`
+export const handler = builder(render);`
     : `
 
-exports.handler = render;`
+export const handler = render;`
 }
 
 
@@ -125,12 +125,8 @@ exports.handler = render;`
  */
 async function render(event, context) {
   const requestTime = new Date();
-  global.staticHttpCache = {};
+  const compiledPortsFile = "./custom-backend-task.mjs";
 
-  const compiledElmPath = path.join(__dirname, "elm-pages-cli.js");
-  const compiledPortsFile = path.join(__dirname, "custom-backend-task.js");
-  const renderer = require("elm-pages/generator/src/render");
-  const preRenderHtml = require("elm-pages/generator/src/pre-render-html");
   try {
     const basePath = "/";
     const mode = "build";
@@ -139,10 +135,10 @@ async function render(event, context) {
     const renderResult = await renderer.render(
       compiledPortsFile,
       basePath,
-      require(compiledElmPath),
+      (await import("./elm-pages-cli.js")).default,
       mode,
       event.path,
-      toJsonHelper(event, requestTime),
+      await reqToJson(event, requestTime),
       addWatcher,
       false
     );
@@ -198,7 +194,7 @@ async function render(event, context) {
  * @param {Date} requestTime
  * @returns {{method: string; rawUrl: string; body: string?; headers: Record<string, string>; requestTime: number; multiPartFormData: unknown }}
  */
-function toJsonHelper(req, requestTime) {
+function reqToJson(req, requestTime) {
   return {
     method: req.httpMethod,
     headers: req.headers,

@@ -6,3 +6,4 @@ functions/render
 functions/server-render
 .idea
 docs.json
+.netlify/

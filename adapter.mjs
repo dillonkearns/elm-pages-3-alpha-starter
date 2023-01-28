@@ -7,18 +7,17 @@ export default async function run({
   portsFilePath,
   htmlTemplate,
 }) {
-  const renderPath = './elm-stuff/elm-pages/elm.cjs'
   console.log("Running adapter script");
   ensureDirSync("functions/render");
   ensureDirSync("functions/server-render");
 
   fs.copyFileSync(
-    renderPath,
-    "./functions/render/elm-pages-cli.cjs"
+    renderFunctionFilePath,
+    "./functions/render/elm-pages-cli.js"
   );
   fs.copyFileSync(
-    renderPath,
-    "./functions/server-render/elm-pages-cli.cjs"
+    renderFunctionFilePath,
+    "./functions/server-render/elm-pages-cli.js"
   );
   fs.copyFileSync(portsFilePath, "./functions/render/custom-backend-task.mjs");
   fs.copyFileSync(
@@ -136,7 +135,7 @@ async function render(event, context) {
     const renderResult = await renderer.render(
       compiledPortsFile,
       basePath,
-      (await import("./elm-pages-cli.cjs")).default,
+      (await import("./elm-pages-cli.js")).default,
       mode,
       event.path,
       await reqToJson(event, requestTime),

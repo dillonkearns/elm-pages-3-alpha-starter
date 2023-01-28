@@ -1,10 +1,12 @@
 module Shared exposing (Data, Model, Msg(..), SharedMsg(..), template)
 
+-- import RemoteData exposing (RemoteData)
+
 import BackendTask exposing (BackendTask)
 import Effect exposing (Effect)
 import FatalError exposing (FatalError)
 import Html exposing (Html)
-import Html.Events
+import Html.Styled
 import Pages.Flags
 import Pages.PageUrl exposing (PageUrl)
 import Path exposing (Path)
@@ -20,17 +22,20 @@ template =
     , view = view
     , data = data
     , subscriptions = subscriptions
-    , onPageChange = Nothing
+    , onPageChange = Just OnPageChange
     }
 
 
 type Msg
-    = SharedMsg SharedMsg
-    | MenuClicked
+    = OnPageChange
+        { path : Path
+        , query : Maybe String
+        , fragment : Maybe String
+        }
 
 
 type alias Data =
-    ()
+    {}
 
 
 type SharedMsg
@@ -38,7 +43,8 @@ type SharedMsg
 
 
 type alias Model =
-    { showMenu : Bool
+    { showMobileMenu : Bool
+    , title : String
     }
 
 
@@ -56,7 +62,7 @@ init :
             }
     -> ( Model, Effect Msg )
 init flags maybePagePath =
-    ( { showMenu = False }
+    ( { showMobileMenu = False, title = "" }
     , Effect.none
     )
 
@@ -64,11 +70,8 @@ init flags maybePagePath =
 update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
-        SharedMsg globalMsg ->
-            ( model, Effect.none )
-
-        MenuClicked ->
-            ( { model | showMenu = not model.showMenu }, Effect.none )
+        OnPageChange _ ->
+            ( { model | showMobileMenu = False }, Effect.none )
 
 
 subscriptions : Path -> Model -> Sub Msg
@@ -78,7 +81,7 @@ subscriptions _ _ =
 
 data : BackendTask FatalError Data
 data =
-    BackendTask.succeed ()
+    BackendTask.succeed {}
 
 
 view :
@@ -91,30 +94,11 @@ view :
     -> (Msg -> msg)
     -> View msg
     -> { body : List (Html msg), title : String }
-view sharedData page model toMsg pageView =
+view anyData page model toMsg pageView =
     { body =
-        [ Html.nav []
-            [ Html.button
-                [ Html.Events.onClick MenuClicked ]
-                [ Html.text
-                    (if model.showMenu then
-                        "Close Menu"
-
-                     else
-                        "Open Menu"
-                    )
-                ]
-            , if model.showMenu then
-                Html.ul []
-                    [ Html.li [] [ Html.text "Menu item 1" ]
-                    , Html.li [] [ Html.text "Menu item 2" ]
-                    ]
-
-              else
-                Html.text ""
-            ]
-            |> Html.map toMsg
-        , Html.main_ [] pageView.body
+        [ Html.Styled.div []
+            pageView.body
+            |> Html.Styled.toUnstyled
         ]
     , title = pageView.title
     }

@@ -7,6 +7,7 @@ export default {
   adapter,
   headTagsTemplate(context) {
     return `
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/amplitudejs@latest/dist/amplitude.min.js"></script>
 <link rel="stylesheet" href="/style.css" />
 <meta name="generator" content="elm-pages v${context.cliVersion}" />
 `;

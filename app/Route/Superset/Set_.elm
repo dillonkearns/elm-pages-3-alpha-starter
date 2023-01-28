@@ -1,4 +1,4 @@
-module Route.Index exposing (ActionData, Data, Model, Msg, route)
+module Route.Superset.Set_ exposing (ActionData, Data, Model, Msg, route)
 
 import BackendTask exposing (BackendTask)
 import Dphones.Enum.Order_by
@@ -18,7 +18,7 @@ import RouteBuilder exposing (StatefulRoute, StaticPayload)
 import Server.Request as Request
 import Server.Response as Response exposing (Response)
 import SetRenderer
-import Shared exposing (..)
+import Shared
 import View exposing (View)
 
 
@@ -35,7 +35,7 @@ type Msg
 
 
 type alias RouteParams =
-    {}
+    { set : String }
 
 
 type alias ActionData =
@@ -52,10 +52,10 @@ route =
         |> RouteBuilder.buildWithLocalState
             { view = view
             , init =
-                \maybePageUrl sharedModel staticPayload ->
+                \_ _ staticPayload ->
                     ( staticPayload.data, Effect.loaded staticPayload.data )
             , update =
-                \pageUrl sharedModel static msg model ->
+                \_ sharedModel static msg model ->
                     ( model, Effect.none )
             , subscriptions =
                 \maybePageUrl routeParams path sharedModel model ->
@@ -66,64 +66,61 @@ route =
 data : RouteParams -> Request.Parser (BackendTask FatalError (Response Data ErrorPage))
 data routeParams =
     let
-        mixenToBody : Maybe SetRenderer.Set -> List SetRenderer.Mixen -> Data
-        mixenToBody setO mixen =
-            case setO of
-                Nothing ->
-                    { set = "Nothing to see, hear", mixen = [] }
+        mixenToBody : String -> List SetRenderer.Mixen -> Data
+        mixenToBody setName mixen =
+            { set = setName, mixen = mixen }
 
-                Just set ->
-                    { set = set.title, mixen = mixen }
+        getSetWhere : Dphones.InputObject.Set_bool_expOptionalFields -> Dphones.InputObject.Set_bool_expOptionalFields
+        getSetWhere optionals =
+            { optionals
+                | tag =
+                    Dphones.InputObject.buildString_comparison_exp
+                        (\compareOptionals ->
+                            { compareOptionals | eq_ = Present routeParams.set }
+                        )
+                        |> Present
+            }
 
-        getSetOrder : Dphones.InputObject.Set_order_byOptionalFields -> Dphones.InputObject.Set_order_byOptionalFields
-        getSetOrder args =
-            { args | date = Present Dphones.Enum.Order_by.Desc }
-
-        params : Dphones.Query.SetOptionalArguments -> Dphones.Query.SetOptionalArguments
-        params args =
+        setParams : Dphones.Query.SetOptionalArguments -> Dphones.Query.SetOptionalArguments
+        setParams args =
             { args
-                | order_by = Present [ Dphones.InputObject.buildSet_order_by getSetOrder ]
+                | where_ = Present (Dphones.InputObject.buildSet_bool_exp getSetWhere)
             }
 
         getMixOrder : Dphones.InputObject.Mixen_order_byOptionalFields -> Dphones.InputObject.Mixen_order_byOptionalFields
         getMixOrder args =
             { args | index = Present Dphones.Enum.Order_by.Asc }
 
-        getMixWhere tag optionals =
+        getMixWhere optionals =
             { optionals
                 | list =
                     Dphones.InputObject.buildString_comparison_exp
                         (\compareOptionals ->
                             { compareOptionals
-                                | eq_ = Present tag
+                                | eq_ = Present routeParams.set
                             }
                         )
                         |> Present
             }
 
-        mixParams : Maybe SetRenderer.Set -> Dphones.Query.MixenOptionalArguments -> Dphones.Query.MixenOptionalArguments
-        mixParams setO args =
-            case setO of
-                Just set ->
-                    { args
-                        | order_by = Present [ Dphones.InputObject.buildMixen_order_by getMixOrder ]
-                        , where_ = Present (Dphones.InputObject.buildMixen_bool_exp (getMixWhere set.tag))
-                    }
-
-                Nothing ->
-                    args
+        mixParams : Dphones.Query.MixenOptionalArguments -> Dphones.Query.MixenOptionalArguments
+        mixParams args =
+            { args
+                | order_by = Present [ Dphones.InputObject.buildMixen_order_by getMixOrder ]
+                , where_ = Present (Dphones.InputObject.buildMixen_bool_exp getMixWhere)
+            }
     in
-    Dphones.Query.set params SetRenderer.setSelection
+    Dphones.Query.set setParams SetRenderer.setSelection
         |> Hasura.backendTask
         |> BackendTask.andThen
             (\sets ->
                 let
-                    setO =
-                        sets |> List.head
+                    setName =
+                        sets |> List.head |> Maybe.map .title |> Maybe.withDefault ""
                 in
-                Dphones.Query.mixen (mixParams setO) SetRenderer.mixenSelection
+                Dphones.Query.mixen mixParams SetRenderer.mixenSelection
                     |> Hasura.backendTask
-                    |> BackendTask.map (mixenToBody setO >> Response.render)
+                    |> BackendTask.map (mixenToBody setName >> Response.render)
             )
         |> Request.succeed
 

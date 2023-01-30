@@ -1,4 +1,5 @@
-import fs from "fs";
+import * as fs from "fs";
+import * as path from "path";
 
 export default async function run({
   renderFunctionFilePath,
@@ -7,23 +8,17 @@ export default async function run({
   portsFilePath,
   htmlTemplate,
 }) {
-  const renderPath = './elm-stuff/elm-pages/elm.cjs'
   console.log("Running adapter script");
   ensureDirSync("functions/render");
   ensureDirSync("functions/server-render");
 
   fs.copyFileSync(
-    renderPath,
+    renderFunctionFilePath,
     "./functions/render/elm-pages-cli.cjs"
   );
   fs.copyFileSync(
-    renderPath,
+    renderFunctionFilePath,
     "./functions/server-render/elm-pages-cli.cjs"
-  );
-  fs.copyFileSync(portsFilePath, "./functions/render/custom-backend-task.mjs");
-  fs.copyFileSync(
-    portsFilePath,
-    "./functions/server-render/custom-backend-task.mjs"
   );
 
   fs.writeFileSync(
@@ -107,6 +102,7 @@ import * as busboy from "busboy";
 import { fileURLToPath } from "url";
 import * as renderer from "elm-pages/generator/src/render.js";
 import * as preRenderHtml from "elm-pages/generator/src/pre-render-html.js";
+import * as customBackendTask from "${path.resolve(portsFilePath)}";
 const htmlTemplate = ${JSON.stringify(htmlTemplate)};
 
 ${
@@ -126,7 +122,6 @@ export const handler = render;`
  */
 async function render(event, context) {
   const requestTime = new Date();
-  const compiledPortsFile = "./custom-backend-task.mjs";
 
   try {
     const basePath = "/";
@@ -134,7 +129,7 @@ async function render(event, context) {
     const addWatcher = () => {};
 
     const renderResult = await renderer.render(
-      compiledPortsFile,
+      customBackendTask,
       basePath,
       (await import("./elm-pages-cli.cjs")).default,
       mode,

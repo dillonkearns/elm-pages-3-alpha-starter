@@ -1,5 +1,6 @@
 {
   "name": "elm-pages-app",
+  "type": "module",
   "scripts": {
     "postinstall": "elm-tooling install",
     "start": "elm-pages dev",

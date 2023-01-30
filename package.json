@@ -1,5 +1,6 @@
 {
   "name": "elm-pages-app",
+  "type": "module",
   "scripts": {
     "postinstall": "elm-tooling install",
     "start": "elm-pages dev",
@@ -8,7 +9,7 @@
   "devDependencies": {
     "elm-codegen": "^0.2.0",
     "elm-optimize-level-2": "^0.3.5",
-    "elm-pages": "^3.0.0-beta.19",
+    "elm-pages": "^3.0.0-beta.20",
     "elm-review": "2.8.5",
     "elm-tooling": "^1.10.0",
     "vite": "^3.1.8"

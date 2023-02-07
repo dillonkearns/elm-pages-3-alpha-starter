@@ -4,28 +4,45 @@ import BackendTask
 import Cli.Option as Option
 import Cli.OptionsParser as OptionsParser
 import Cli.Program as Program
-import Cli.Validate
 import Elm
-import Elm.Annotation
+import Elm.Annotation as Type
 import Elm.Case
+import Elm.Declare
+import Elm.Let
+import Elm.Op
 import Gen.BackendTask
-import Gen.Effect
-import Gen.Form
-import Gen.Form.Field
-import Gen.Form.Validation
-import Gen.Html
+import Gen.Debug
+import Gen.Effect as Effect
+import Gen.Form as Form
+import Gen.Form.FieldView as FieldView
+import Gen.Html as Html
+import Gen.Html.Attributes as Attr
+import Gen.List
+import Gen.Pages.Script
 import Gen.Platform.Sub
-import Gen.Server.Request
-import Gen.Server.Response
+import Gen.Server.Request as Request
+import Gen.Server.Response as Response
 import Gen.View
-import Pages.Generate exposing (Type(..))
 import Pages.Script as Script exposing (Script)
+import Scaffold.Form
+import Scaffold.Route exposing (Type(..))
 
 
 type alias CliOptions =
-    { moduleName : String
-    , rest : List String
+    { moduleName : List String
+    , fields : List ( String, Scaffold.Form.Kind )
     }
+
+
+run : Script
+run =
+    Script.withCliOptions program
+        (\cliOptions ->
+            cliOptions
+                |> createFile
+                |> Script.writeFile
+                |> BackendTask.allowFatal
+        )
 
 
 program : Program.Config CliOptions
@@ -33,120 +50,160 @@ program =
     Program.config
         |> Program.add
             (OptionsParser.build CliOptions
-                |> OptionsParser.with
-                    (Option.requiredPositionalArg "module"
-                        |> Option.validate (Cli.Validate.regex moduleNameRegex)
-                    )
-                |> OptionsParser.withRestArgs
-                    (Option.restArgs "fields")
+                |> OptionsParser.with (Option.requiredPositionalArg "module" |> Scaffold.Route.moduleNameCliArg)
+                |> OptionsParser.withRestArgs Scaffold.Form.restArgsParser
             )
 
 
-moduleNameRegex : String
-moduleNameRegex =
-    "^[A-Z][a-zA-Z0-9_]*(\\.([A-Z][a-zA-Z0-9_]*))*$"
-
-
-type Kind
-    = Kind
-
-
-formWithFields : List ( String, Kind ) -> Elm.Expression
-formWithFields fields =
-    Gen.Form.init
-        (Elm.function (List.map fieldToParam fields)
-            (\params ->
-                Elm.record
-                    [ ( "combine"
-                      , params
-                            |> List.foldl
-                                (\fieldExpression chain ->
-                                    chain
-                                        |> Gen.Form.Validation.andMap fieldExpression
-                                )
-                                (Gen.Form.Validation.succeed Elm.unit)
-                      )
-                    , ( "view"
-                      , Elm.list
-                            [ Gen.Html.button [] []
-                            ]
-                      )
-                    ]
-            )
-        )
-        |> Gen.Form.field "name" (Gen.Form.Field.text |> Gen.Form.Field.required (Elm.string "Required"))
-
-
-fieldToParam : ( String, Kind ) -> ( String, Maybe Elm.Annotation.Annotation )
-fieldToParam ( name, kind ) =
-    ( name, Nothing )
-
-
-run : Script
-run =
-    Script.withCliOptions program
-        (\cliOptions ->
-            let
-                file : Elm.File
-                file =
-                    createFile (cliOptions.moduleName |> String.split ".")
-            in
-            Script.writeFile
-                { path = "app/" ++ file.path
-                , body = file.contents
+createFile : CliOptions -> { path : String, body : String }
+createFile { moduleName, fields } =
+    let
+        formHelpers :
+            Maybe
+                { formHandlers : Elm.Expression
+                , form : Elm.Expression
+                , declarations : List Elm.Declaration
                 }
-                |> BackendTask.allowFatal
-        )
-
-
-createFile : List String -> Elm.File
-createFile moduleName =
-    Pages.Generate.serverRender
+        formHelpers =
+            Scaffold.Form.provide
+                { fields = fields
+                , elmCssView = False
+                , view =
+                    \{ formState, params } ->
+                        Elm.Let.letIn
+                            (\fieldView ->
+                                Elm.list
+                                    ((params
+                                        |> List.map
+                                            (\{ name, kind, param } ->
+                                                fieldView (Elm.string name) param
+                                            )
+                                     )
+                                        ++ [ Elm.ifThen formState.isTransitioning
+                                                (Html.button
+                                                    [ Attr.disabled True
+                                                    ]
+                                                    [ Html.text "Submitting..."
+                                                    ]
+                                                )
+                                                (Html.button []
+                                                    [ Html.text "Submit"
+                                                    ]
+                                                )
+                                           ]
+                                    )
+                            )
+                            |> Elm.Let.fn2 "fieldView"
+                                ( "label", Type.string |> Just )
+                                ( "field", Nothing )
+                                (\label field ->
+                                    Html.div []
+                                        [ Html.label []
+                                            [ Html.call_.text (Elm.Op.append label (Elm.string " "))
+                                            , field |> FieldView.input []
+                                            , errorsView.call formState.errors field
+                                            ]
+                                        ]
+                                )
+                            |> Elm.Let.toExpression
+                }
+    in
+    Scaffold.Route.serverRender
         { moduleName = moduleName
         , action =
-            ( Alias (Elm.Annotation.record [])
-            , \routeParams ->
-                Gen.Server.Request.succeed
-                    (Gen.BackendTask.succeed
-                        (Gen.Server.Response.render
-                            (Elm.record [])
-                        )
+            ( Alias
+                (Type.record
+                    (case formHelpers of
+                        Just _ ->
+                            [ ( "errors", Type.namedWith [ "Form" ] "Response" [ Type.string ] )
+                            ]
+
+                        Nothing ->
+                            []
                     )
+                )
+            , \routeParams ->
+                formHelpers
+                    |> Maybe.map
+                        (\justFormHelp ->
+                            Request.formData justFormHelp.formHandlers
+                                |> Request.call_.map
+                                    (Elm.fn ( "formData", Nothing )
+                                        (\formData ->
+                                            Elm.Case.tuple formData
+                                                "response"
+                                                "parsedForm"
+                                                (\response parsedForm ->
+                                                    Gen.Debug.toString parsedForm
+                                                        |> Gen.Pages.Script.call_.log
+                                                        |> Gen.BackendTask.call_.map
+                                                            (Elm.fn ( "_", Nothing )
+                                                                (\_ ->
+                                                                    Response.render
+                                                                        (Elm.record
+                                                                            [ ( "errors", response )
+                                                                            ]
+                                                                        )
+                                                                )
+                                                            )
+                                                )
+                                        )
+                                    )
+                        )
+                    |> Maybe.withDefault
+                        (Request.succeed
+                            (Gen.BackendTask.succeed
+                                (Response.render
+                                    (Elm.record [])
+                                )
+                            )
+                        )
             )
         , data =
-            ( Alias (Elm.Annotation.record [])
+            ( Alias (Type.record [])
             , \routeParams ->
-                Gen.Server.Request.succeed
+                Request.succeed
                     (Gen.BackendTask.succeed
-                        (Gen.Server.Response.render
+                        (Response.render
                             (Elm.record [])
                         )
                     )
             )
         , head = \app -> Elm.list []
         }
-        --|> Pages.Generate.buildNoState
-        --    { view =
-        --        \_ _ _ ->
-        --            Gen.View.make_.view
-        --                { title = moduleName |> String.join "." |> Elm.string
-        --                , body = Elm.list [ Gen.Html.text "Here is your generated page!!!" ]
-        --                }
-        --    }
-        |> Pages.Generate.buildWithLocalState
+        |> Scaffold.Route.addDeclarations
+            (formHelpers
+                |> Maybe.map .declarations
+                |> Maybe.map ((::) errorsView.declaration)
+                |> Maybe.withDefault []
+            )
+        |> Scaffold.Route.buildWithLocalState
             { view =
                 \{ maybeUrl, sharedModel, model, app } ->
                     Gen.View.make_.view
                         { title = moduleName |> String.join "." |> Elm.string
-                        , body = Elm.list [ Gen.Html.text "Here is your generated page!!!" ]
+                        , body =
+                            Elm.list
+                                (case formHelpers of
+                                    Just justFormHelp ->
+                                        [ Html.h2 [] [ Html.text "Form" ]
+                                        , justFormHelp.form
+                                            |> Form.toDynamicTransition "form"
+                                            |> Form.renderHtml [] (Elm.get "errors" >> Elm.just) app Elm.unit
+                                        ]
+
+                                    Nothing ->
+                                        [ Html.h2 [] [ Html.text "New Page" ]
+                                        ]
+                                )
                         }
             , update =
                 \{ pageUrl, sharedModel, app, msg, model } ->
                     Elm.Case.custom msg
-                        (Elm.Annotation.named [] "Msg")
+                        (Type.named [] "Msg")
                         [ Elm.Case.branch0 "NoOp"
                             (Elm.tuple model
-                                (Gen.Effect.none
+                                (Effect.none
                                     |> Elm.withType effectType
                                 )
                             )
@@ -154,19 +211,69 @@ createFile moduleName =
             , init =
                 \{ pageUrl, sharedModel, app } ->
                     Elm.tuple (Elm.record [])
-                        (Gen.Effect.none
+                        (Effect.none
                             |> Elm.withType effectType
                         )
             , subscriptions =
                 \{ maybePageUrl, routeParams, path, sharedModel, model } ->
                     Gen.Platform.Sub.none
             , model =
-                Alias (Elm.Annotation.record [])
+                Alias (Type.record [])
             , msg =
                 Custom [ Elm.variant "NoOp" ]
             }
 
 
-effectType : Elm.Annotation.Annotation
+errorsView :
+    { declaration : Elm.Declaration
+    , call : Elm.Expression -> Elm.Expression -> Elm.Expression
+    , callFrom : List String -> Elm.Expression -> Elm.Expression -> Elm.Expression
+    }
+errorsView =
+    Elm.Declare.fn2 "errorsView"
+        ( "errors", Type.namedWith [ "Form" ] "Errors" [ Type.string ] |> Just )
+        ( "field"
+        , Type.namedWith [ "Form", "Validation" ]
+            "Field"
+            [ Type.string
+            , Type.var "parsed"
+            , Type.var "kind"
+            ]
+            |> Just
+        )
+        (\errors field ->
+            Elm.ifThen
+                (Gen.List.call_.isEmpty (Form.errorsForField field errors))
+                (Html.div [] [])
+                (Html.div
+                    []
+                    [ Html.call_.ul (Elm.list [])
+                        (Gen.List.call_.map
+                            (Elm.fn ( "error", Nothing )
+                                (\error ->
+                                    Html.li
+                                        [ Attr.style "color" "red"
+                                        ]
+                                        [ Html.call_.text error
+                                        ]
+                                )
+                            )
+                            (Form.errorsForField field errors)
+                        )
+                    ]
+                )
+                |> Elm.withType
+                    (Type.namedWith [ "Html" ]
+                        "Html"
+                        [ Type.namedWith
+                            [ "Pages", "Msg" ]
+                            "Msg"
+                            [ Type.named [] "Msg" ]
+                        ]
+                    )
+        )
+
+
+effectType : Type.Annotation
 effectType =
-    Elm.Annotation.namedWith [ "Effect" ] "Effect" [ Elm.Annotation.var "msg" ]
+    Type.namedWith [ "Effect" ] "Effect" [ Type.var "msg" ]

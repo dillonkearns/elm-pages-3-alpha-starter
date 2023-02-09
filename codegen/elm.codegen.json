@@ -4,7 +4,7 @@
         "packages": {
             "elm/core": "1.0.5",
             "elm/html": "1.0.0",
-            "dillonkearns/elm-pages-v3-beta": "13.0.0"
+            "dillonkearns/elm-pages-v3-beta": "13.0.1"
         },
         "local": [
             ".elm-pages/",

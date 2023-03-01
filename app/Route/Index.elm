@@ -8,9 +8,9 @@ import Head.Seo as Seo
 import Html
 import Html.Attributes as Attr
 import Json.Decode as Decode
-import Pages.Msg
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Url
+import PagesMsg exposing (PagesMsg)
 import Path
 import Route
 import RouteBuilder exposing (StatelessRoute, StaticPayload)
@@ -79,7 +79,7 @@ view :
     Maybe PageUrl
     -> Shared.Model
     -> StaticPayload Data ActionData RouteParams
-    -> View (Pages.Msg.Msg Msg)
+    -> View (PagesMsg Msg)
 view maybeUrl sharedModel app =
     { title = "elm-pages is running"
     , body =

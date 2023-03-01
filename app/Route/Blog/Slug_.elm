@@ -5,9 +5,9 @@ import FatalError exposing (FatalError)
 import Head
 import Head.Seo as Seo
 import Html
-import Pages.Msg
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Url
+import PagesMsg exposing (PagesMsg)
 import RouteBuilder exposing (StatelessRoute, StaticPayload)
 import Shared
 import View exposing (View)
@@ -81,7 +81,7 @@ view :
     Maybe PageUrl
     -> Shared.Model
     -> StaticPayload Data ActionData RouteParams
-    -> View (Pages.Msg.Msg Msg)
+    -> View (PagesMsg Msg)
 view maybeUrl sharedModel static =
     { title = "Placeholder - Blog.Slug_"
     , body = [ Html.text "You're on the page Blog.Slug_" ]

@@ -15,6 +15,7 @@ config =
 
 head : BackendTask FatalError (List Head.Tag)
 head =
-    [ Head.sitemapLink "/sitemap.xml"
+    [ Head.metaName "viewport" (Head.raw "width=device-width,initial-scale=1")
+    , Head.sitemapLink "/sitemap.xml"
     ]
         |> BackendTask.succeed

@@ -1,19 +1,20 @@
 module Route.Hello exposing (ActionData, Data, Model, Msg(..), RouteParams, action, data, route)
 
-import BackendTask
+import BackendTask exposing (BackendTask)
 import BackendTask.Http
-import Effect
-import ErrorPage
-import FatalError
+import Effect exposing (Effect)
+import ErrorPage exposing (ErrorPage)
+import FatalError exposing (FatalError)
 import Head
 import Html
 import Json.Decode as Decode
-import Platform.Sub
+import PagesMsg exposing (PagesMsg)
+import Path exposing (Path)
 import RouteBuilder exposing (App)
 import Server.Request
 import Server.Response
 import Shared
-import View
+import View exposing (View)
 
 
 type alias Model =
@@ -39,10 +40,10 @@ route =
 
 
 init :
-    RouteBuilder.App Data ActionData RouteParams
+    App Data ActionData RouteParams
     -> Shared.Model
-    -> ( {}, Effect.Effect msg )
-init app sharedModel =
+    -> ( Model, Effect Msg )
+init app shared =
     ( {}, Effect.none )
 
 
@@ -51,7 +52,7 @@ update :
     -> Shared.Model
     -> Msg
     -> Model
-    -> ( Model, Effect.Effect msg )
+    -> ( Model, Effect Msg )
 update app shared msg model =
     case msg of
         NoOp ->
@@ -59,11 +60,11 @@ update app shared msg model =
 
 
 subscriptions :
-    routeParams
-    -> path
-    -> sharedModel
-    -> model
-    -> Sub msg
+    RouteParams
+    -> Path
+    -> Shared.Model
+    -> Model
+    -> Sub Msg
 subscriptions routeParams path shared model =
     Sub.none
 
@@ -79,7 +80,7 @@ type alias ActionData =
 
 data :
     RouteParams
-    -> Server.Request.Parser (BackendTask.BackendTask FatalError.FatalError (Server.Response.Response Data ErrorPage.ErrorPage))
+    -> Server.Request.Parser (BackendTask FatalError (Server.Response.Response Data ErrorPage))
 data routeParams =
     Server.Request.succeed
         (BackendTask.Http.getWithOptions
@@ -106,7 +107,7 @@ view :
     App Data ActionData RouteParams
     -> Shared.Model
     -> Model
-    -> View.View msg
+    -> View (PagesMsg Msg)
 view app shared model =
     { title = "Hello", body = [ Html.text (String.fromInt app.data.stars) ] }
 

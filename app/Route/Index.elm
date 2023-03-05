@@ -1,14 +1,10 @@
 module Route.Index exposing (ActionData, Data, Model, Msg, route)
 
 import BackendTask exposing (BackendTask)
-import BackendTask.Http
 import FatalError exposing (FatalError)
 import Head
 import Head.Seo as Seo
 import Html
-import Html.Attributes as Attr
-import Json.Decode as Decode
-import Pages.PageUrl exposing (PageUrl)
 import Pages.Url
 import PagesMsg exposing (PagesMsg)
 import Path
@@ -79,7 +75,7 @@ view :
     App Data ActionData RouteParams
     -> Shared.Model
     -> View (PagesMsg Msg)
-view app sharedModel =
+view app shared =
     { title = "elm-pages is running"
     , body =
         [ Html.h1 [] [ Html.text "elm-pages is up and running!" ]

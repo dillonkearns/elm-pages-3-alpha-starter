@@ -134,18 +134,40 @@ createFile { moduleName, fields } =
                                                 "response"
                                                 "parsedForm"
                                                 (\response parsedForm ->
-                                                    Gen.Debug.toString parsedForm
-                                                        |> Gen.Pages.Script.call_.log
-                                                        |> Gen.BackendTask.call_.map
-                                                            (Elm.fn ( "_", Nothing )
-                                                                (\_ ->
-                                                                    Response.render
-                                                                        (Elm.record
-                                                                            [ ( "errors", response )
-                                                                            ]
+                                                    Elm.Case.result parsedForm
+                                                        { err =
+                                                            ( "error"
+                                                            , \error ->
+                                                                Gen.Debug.toString error
+                                                                    |> Gen.Pages.Script.call_.log
+                                                                    |> Gen.BackendTask.call_.map
+                                                                        (Elm.fn ( "_", Nothing )
+                                                                            (\_ ->
+                                                                                Response.render
+                                                                                    (Elm.record
+                                                                                        [ ( "errors", response )
+                                                                                        ]
+                                                                                    )
+                                                                            )
                                                                         )
-                                                                )
                                                             )
+                                                        , ok =
+                                                            ( "okForm"
+                                                            , \okForm ->
+                                                                Gen.Debug.toString okForm
+                                                                    |> Gen.Pages.Script.call_.log
+                                                                    |> Gen.BackendTask.call_.map
+                                                                        (Elm.fn ( "_", Nothing )
+                                                                            (\_ ->
+                                                                                Response.render
+                                                                                    (Elm.record
+                                                                                        [ ( "errors", response )
+                                                                                        ]
+                                                                                    )
+                                                                            )
+                                                                        )
+                                                            )
+                                                        }
                                                 )
                                         )
                                     )
@@ -179,7 +201,7 @@ createFile { moduleName, fields } =
             )
         |> Scaffold.Route.buildWithLocalState
             { view =
-                \{ maybeUrl, sharedModel, model, app } ->
+                \{ shared, model, app } ->
                     Gen.View.make_.view
                         { title = moduleName |> String.join "." |> Elm.string
                         , body =
@@ -188,8 +210,7 @@ createFile { moduleName, fields } =
                                     Just justFormHelp ->
                                         [ Html.h2 [] [ Html.text "Form" ]
                                         , justFormHelp.form
-                                            |> Form.toDynamicTransition "form"
-                                            |> Form.renderHtml [] (Elm.get "errors" >> Elm.just) app Elm.unit
+                                            |> Form.renderHtml "form" [] (Elm.get "errors" >> Elm.just) app Elm.unit
                                         ]
 
                                     Nothing ->
@@ -198,7 +219,7 @@ createFile { moduleName, fields } =
                                 )
                         }
             , update =
-                \{ pageUrl, sharedModel, app, msg, model } ->
+                \{ shared, app, msg, model } ->
                     Elm.Case.custom msg
                         (Type.named [] "Msg")
                         [ Elm.Case.branch0 "NoOp"
@@ -209,13 +230,13 @@ createFile { moduleName, fields } =
                             )
                         ]
             , init =
-                \{ pageUrl, sharedModel, app } ->
+                \{ shared, app } ->
                     Elm.tuple (Elm.record [])
                         (Effect.none
                             |> Elm.withType effectType
                         )
             , subscriptions =
-                \{ maybePageUrl, routeParams, path, sharedModel, model } ->
+                \{ routeParams, path, shared, model } ->
                     Gen.Platform.Sub.none
             , model =
                 Alias (Type.record [])

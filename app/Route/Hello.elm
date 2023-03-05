@@ -1,7 +1,5 @@
 module Route.Hello exposing (ActionData, Data, Model, Msg(..), RouteParams, action, data, route)
 
-{-| -}
-
 import BackendTask
 import BackendTask.Http
 import Effect
@@ -10,11 +8,11 @@ import FatalError
 import Head
 import Html
 import Json.Decode as Decode
-import Pages.PageUrl
 import Platform.Sub
-import RouteBuilder
+import RouteBuilder exposing (App)
 import Server.Request
 import Server.Response
+import Shared
 import View
 
 
@@ -41,36 +39,33 @@ route =
 
 
 init :
-    Maybe Pages.PageUrl.PageUrl
-    -> sharedModel
-    -> RouteBuilder.StaticPayload Data ActionData RouteParams
+    RouteBuilder.App Data ActionData RouteParams
+    -> Shared.Model
     -> ( {}, Effect.Effect msg )
-init pageUrl sharedModel app =
+init app sharedModel =
     ( {}, Effect.none )
 
 
 update :
-    Pages.PageUrl.PageUrl
-    -> sharedModel
-    -> RouteBuilder.StaticPayload Data ActionData RouteParams
+    App Data ActionData RouteParams
+    -> Shared.Model
     -> Msg
     -> Model
     -> ( Model, Effect.Effect msg )
-update pageUrl sharedModel app msg model =
+update app shared msg model =
     case msg of
         NoOp ->
             ( model, Effect.none )
 
 
 subscriptions :
-    Maybe Pages.PageUrl.PageUrl
-    -> routeParams
+    routeParams
     -> path
     -> sharedModel
     -> model
     -> Sub msg
-subscriptions maybePageUrl routeParams path sharedModel model =
-    Platform.Sub.none
+subscriptions routeParams path shared model =
+    Sub.none
 
 
 type alias Data =
@@ -102,18 +97,17 @@ data routeParams =
         )
 
 
-head : RouteBuilder.StaticPayload Data ActionData RouteParams -> List Head.Tag
+head : App Data ActionData RouteParams -> List Head.Tag
 head app =
     []
 
 
 view :
-    Maybe Pages.PageUrl.PageUrl
-    -> sharedModel
+    App Data ActionData RouteParams
+    -> Shared.Model
     -> Model
-    -> RouteBuilder.StaticPayload Data ActionData RouteParams
     -> View.View msg
-view maybeUrl sharedModel model app =
+view app shared model =
     { title = "Hello", body = [ Html.text (String.fromInt app.data.stars) ] }
 
 

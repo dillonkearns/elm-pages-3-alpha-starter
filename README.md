@@ -43,4 +43,4 @@ You can also use `npx elm-pages docs` from your project to view the documentatio
 ## Running Scripts with `elm-pages run`
 
 - `npm install`
-- `npx elm-pages run Cli User.Id_` - now you can try out the generator! And you can tweak it, or even define new generator modules in the `script/` folder!
+- `npx elm-pages run script/src/AddRoute.elm User.Id_` - now you can try out the generator! And you can tweak it, or even define new generator modules in the `script/` folder! You can also shorten this command to `npx elm-pages run AddRoute User.Id_` if you prefer.

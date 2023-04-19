@@ -7,7 +7,7 @@ module Effect exposing (Effect(..), batch, fromCmd, map, none, perform)
 -}
 
 import Browser.Navigation
-import Form.FormData exposing (FormData)
+import Form
 import Http
 import Json.Decode as Decode
 import Pages.Fetcher
@@ -145,3 +145,11 @@ perform ({ fromPageMsg, key } as helpers) effect =
 
         SubmitFetcher record ->
             helpers.runFetcher record
+
+
+type alias FormData =
+    { fields : List ( String, String )
+    , method : Form.Method
+    , action : String
+    , id : Maybe String
+    }

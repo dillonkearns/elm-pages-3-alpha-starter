@@ -4,7 +4,6 @@ This is a starter to try the elm-pages 3.0 beta. Any feedback would be very help
 
 This branch is a setup for trying out elm-pages Scripts (the `elm-pages run` command) without an actual `elm-pages` app. You can use it by moving the `script/` folder (and any other files you'd like) into your project, whether it uses `elm-pages` otherwise or not!
 
-
 Examples:
 
 ```shell
@@ -62,4 +61,4 @@ The docs for `elm-pages` Scripts is at https://package.elm-lang.org/packages/dil
 ## Running the `elm-pages run` command
 
 - `npm install`
-- `npx elm-pages run Stars --repo elm-graphql` - now you can run scripts! You can tweak them, or even define new Script modules in the `script/` folder!
+- `npx elm-pages run script/src/Stars.elm --repo elm-graphql` - now you can run scripts! You can tweak them, or even define new Script modules in the `script/src/` folder! You can also shorten this command to `npx elm-pages run Stars --repo elm-graphql` if you prefer.

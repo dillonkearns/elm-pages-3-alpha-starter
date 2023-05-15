@@ -1,6 +1,6 @@
 # README
 
-This is a starter to try the elm-pages 3.0 alpha. Any feedback would be very helpful for getting the release ready to go!
+This is a starter to try the elm-pages 3.0 Release Candidate. Any feedback would be very helpful for getting the release ready to go!
 
 You can try this out on Netlify in just a couple of clicks with this button:
 
@@ -11,6 +11,10 @@ You can try this out on Netlify in just a couple of clicks with this button:
 You can clone this repo with `git clone https://github.com/dillonkearns/elm-pages-3-alpha-starter.git`.
 
 `npm install` from the cloned repo. Before running the dev server or build, make sure to install Lamdera (see below).
+
+`npm start` starts the dev server with hot reloading.
+
+`npm run build` builds the app for production.
 
 ### Install Lamdera
 

@@ -7,7 +7,7 @@ import Html exposing (Html)
 import Html.Events
 import Pages.Flags
 import Pages.PageUrl exposing (PageUrl)
-import Path exposing (Path)
+import UrlPath exposing (UrlPath)
 import Route exposing (Route)
 import SharedTemplate exposing (SharedTemplate)
 import View exposing (View)
@@ -47,7 +47,7 @@ init :
     ->
         Maybe
             { path :
-                { path : Path
+                { path : UrlPath
                 , query : Maybe String
                 , fragment : Maybe String
                 }
@@ -71,7 +71,7 @@ update msg model =
             ( { model | showMenu = not model.showMenu }, Effect.none )
 
 
-subscriptions : Path -> Model -> Sub Msg
+subscriptions : UrlPath -> Model -> Sub Msg
 subscriptions _ _ =
     Sub.none
 
@@ -84,7 +84,7 @@ data =
 view :
     Data
     ->
-        { path : Path
+        { path : UrlPath
         , route : Maybe Route
         }
     -> Model

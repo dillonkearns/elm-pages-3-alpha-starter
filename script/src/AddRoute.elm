@@ -12,6 +12,7 @@ import Elm.Let
 import Elm.Op
 import Gen.BackendTask
 import Gen.Effect as Effect
+import Gen.FatalError
 import Gen.Form as Form
 import Gen.Form.FieldView as FieldView
 import Gen.Html as Html
@@ -21,7 +22,6 @@ import Gen.List
 import Gen.Maybe
 import Gen.Pages.Form as PagesForm
 import Gen.Pages.Script
-import Gen.Platform.Sub
 import Gen.Server.Request as Request
 import Gen.Server.Response as Response
 import Gen.View
@@ -124,12 +124,12 @@ createFile { moduleName, fields } =
                             []
                     )
                 )
-            , \routeParams ->
+            , \routeParams request ->
                 formHelpers
                     |> Maybe.map
                         (\justFormHelp ->
-                            Request.formData justFormHelp.formHandlers
-                                |> Request.call_.map
+                            Request.formData justFormHelp.formHandlers request
+                                |> Gen.Maybe.call_.map
                                     (Elm.fn ( "formData", Nothing )
                                         (\formData ->
                                             Elm.Case.tuple formData
@@ -183,24 +183,24 @@ createFile { moduleName, fields } =
                                                 )
                                         )
                                     )
+                                |> Gen.Maybe.withDefault
+                                    (Gen.BackendTask.fail
+                                        (Gen.FatalError.fromString "Expected form post")
+                                    )
                         )
                     |> Maybe.withDefault
-                        (Request.succeed
-                            (Gen.BackendTask.succeed
-                                (Response.render
-                                    (Elm.record [])
-                                )
+                        (Gen.BackendTask.succeed
+                            (Response.render
+                                (Elm.record [])
                             )
                         )
             )
         , data =
             ( Alias (Type.record [])
-            , \routeParams ->
-                Request.succeed
-                    (Gen.BackendTask.succeed
-                        (Response.render
-                            (Elm.record [])
-                        )
+            , \routeParams request ->
+                Gen.BackendTask.succeed
+                    (Response.render
+                        (Elm.record [])
                     )
             )
         , head = \app -> Elm.list []
@@ -224,7 +224,6 @@ createFile { moduleName, fields } =
                                         , justFormHelp.form
                                             |> PagesForm.call_.renderHtml
                                                 (Elm.list [])
-                                                PagesForm.make_.serial
                                                 (Form.options "form"
                                                     |> Form.withServerResponse
                                                         (app
@@ -254,7 +253,7 @@ createFile { moduleName, fields } =
                     Elm.tuple (Elm.record []) Effect.none
             , subscriptions =
                 \{ routeParams, path, shared, model } ->
-                    Gen.Platform.Sub.none
+                    Elm.val "Sub.none"
             , model =
                 Alias (Type.record [])
             , msg =

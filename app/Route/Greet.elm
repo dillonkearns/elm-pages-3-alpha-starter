@@ -11,7 +11,7 @@ import Json.Decode as Decode
 import Pages.Url
 import PagesMsg exposing (PagesMsg)
 import RouteBuilder exposing (App, StatefulRoute, StatelessRoute)
-import Server.Request as Request
+import Server.Request as Request exposing (Request)
 import Server.Response as Response exposing (Response)
 import Shared
 import View exposing (View)
@@ -34,7 +34,7 @@ route =
     RouteBuilder.serverRender
         { head = head
         , data = data
-        , action = \_ -> Request.succeed (BackendTask.fail (FatalError.fromString "No action."))
+        , action = \_ _ -> BackendTask.fail (FatalError.fromString "No action.")
         }
         |> RouteBuilder.buildNoState { view = view }
 
@@ -48,28 +48,24 @@ type alias ActionData =
     {}
 
 
-data : RouteParams -> Request.Parser (BackendTask FatalError (Response Data ErrorPage))
-data routeParams =
-    Request.oneOf
-        [ Request.expectQueryParam "name"
-            |> Request.map
-                (\name ->
-                    BackendTask.Http.getJson "http://worldtimeapi.org/api/timezone/America/Los_Angeles"
-                        (Decode.field "utc_datetime" Decode.string)
-                        |> BackendTask.allowFatal
-                        |> BackendTask.map
-                            (\dateTimeString ->
-                                Response.render
-                                    { name = Just dateTimeString }
-                            )
-                )
-        , Request.succeed
-            (BackendTask.succeed
+data : RouteParams -> Request -> BackendTask FatalError (Response Data ErrorPage)
+data routeParams request =
+    case request |> Request.queryParam "name" of
+        Just name ->
+            BackendTask.Http.getJson "http://worldtimeapi.org/api/timezone/America/Los_Angeles"
+                (Decode.field "utc_datetime" Decode.string)
+                |> BackendTask.allowFatal
+                |> BackendTask.map
+                    (\dateTimeString ->
+                        Response.render
+                            { name = Just dateTimeString }
+                    )
+
+        Nothing ->
+            BackendTask.succeed
                 (Response.render
                     { name = Nothing }
                 )
-            )
-        ]
 
 
 head :

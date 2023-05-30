@@ -9,11 +9,11 @@ import Head
 import Html
 import Json.Decode as Decode
 import PagesMsg exposing (PagesMsg)
-import UrlPath exposing (UrlPath)
 import RouteBuilder exposing (App)
-import Server.Request
+import Server.Request exposing (Request)
 import Server.Response
 import Shared
+import UrlPath exposing (UrlPath)
 import View exposing (View)
 
 
@@ -80,22 +80,21 @@ type alias ActionData =
 
 data :
     RouteParams
-    -> Server.Request.Parser (BackendTask FatalError (Server.Response.Response Data ErrorPage))
-data routeParams =
-    Server.Request.succeed
-        (BackendTask.Http.getWithOptions
-            { url = "https://api.github.com/repos/dillonkearns/elm-pages"
-            , expect = BackendTask.Http.expectJson (Decode.field "stargazers_count" Decode.int)
-            , headers = []
-            , cacheStrategy = Just BackendTask.Http.IgnoreCache
-            , retries = Nothing
-            , timeoutInMs = Nothing
-            , cachePath = Nothing
-            }
-            |> BackendTask.allowFatal
-            |> BackendTask.map
-                (\stars -> Server.Response.render { stars = stars })
-        )
+    -> Request
+    -> BackendTask FatalError (Server.Response.Response Data ErrorPage)
+data routeParams request =
+    BackendTask.Http.getWithOptions
+        { url = "https://api.github.com/repos/dillonkearns/elm-pages"
+        , expect = BackendTask.Http.expectJson (Decode.field "stargazers_count" Decode.int)
+        , headers = []
+        , cacheStrategy = Just BackendTask.Http.IgnoreCache
+        , retries = Nothing
+        , timeoutInMs = Nothing
+        , cachePath = Nothing
+        }
+        |> BackendTask.allowFatal
+        |> BackendTask.map
+            (\stars -> Server.Response.render { stars = stars })
 
 
 head : App Data ActionData RouteParams -> List Head.Tag
@@ -114,6 +113,7 @@ view app shared model =
 
 action :
     RouteParams
-    -> Server.Request.Parser (BackendTask.BackendTask FatalError.FatalError (Server.Response.Response ActionData ErrorPage.ErrorPage))
-action routeParams =
-    Server.Request.succeed (BackendTask.succeed (Server.Response.render {}))
+    -> Request
+    -> BackendTask.BackendTask FatalError.FatalError (Server.Response.Response ActionData ErrorPage.ErrorPage)
+action routeParams request =
+    BackendTask.succeed (Server.Response.render {})

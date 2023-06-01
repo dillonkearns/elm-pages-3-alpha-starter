@@ -15,6 +15,7 @@
     "vite": "^4.3.5"
   },
   "dependencies": {
-    "@netlify/functions": "^1.4.0"
+    "@netlify/functions": "^1.4.0",
+    "dotenv": "^16.1.3"
   }
 }
